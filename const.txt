@@ -1,0 +1,28 @@
+const fileInput = document.getElementById('fileInput');
+const fileList = document.getElementById('fileList');
+
+function uploadFile() {
+    const file = fileInput.files[0];
+    if (file) {
+        const fileItem = document.createElement('div');
+        fileItem.innerHTML = `
+            <h3>${file.name}</h3>
+            <div>
+                <textarea placeholder="Add a comment"></textarea>
+                <button onclick="addComment(this)">Comment</button>
+            </div>
+            <div class="comments"></div>
+        `;
+        fileList.appendChild(fileItem);
+    }
+}
+
+function addComment(button) {
+    const commentText = button.previousElementSibling.value;
+    if (commentText) {
+        const comment = document.createElement('p');
+        comment.textContent = commentText;
+        button.parentElement.nextElementSibling.appendChild(comment);
+        button.previousElementSibling.value = '';
+    }
+}
