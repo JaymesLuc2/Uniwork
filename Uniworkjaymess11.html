@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jaymes Cardoso Ake - Assignments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #0d1b2a;
+            color: #ffffff;
+        }
+        header {
+            background-color: #1b263b;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #ffffff;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+        }
+        .main-content {
+            flex: 3;
+            padding: 20px;
+        }
+        .assignments, .files {
+            flex: 1;
+            background-color: #1b263b;
+            padding: 20px;
+            margin-left: 20px;
+        }
+        .assignments h2, .files h2 {
+            color: #ffffff;
+        }
+        .assignments ul, .files ul {
+            list-style: none;
+            padding: 0;
+        }
+        .assignments li, .files li {
+            background-color: #0d1b2a;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .assignments li button, .files li button {
+            background-color: #e63946;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Jaymes Cardoso Ake</h1>
+    </header>
+    <div class="container">
+        <section class="assignments">
+            <h2>The Assignments</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" name="file" required>
+                <button type="submit">Upload</button>
+            </form>
+            <ul id="fileList"></ul>
+        </section>
+        <section class="files">
+            <h2>Files</h2>
+            <ul id="storedFilesList"></ul>
+        </section>
+    </div>
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            if (response.ok) {
+                alert('File uploaded successfully!');
+                loadFiles();
+            } else {
+                alert('File upload failed.');
+            }
+        });
+
+        async function loadFiles() {
+            const response = await fetch('/files');
+            const files = await response.json();
+            const fileList = document.getElementById('fileList');
+            const storedFilesList = document.getElementById('storedFilesList');
+            fileList.innerHTML = '';
+            storedFilesList.innerHTML = '';
+            files.forEach(file => {
+                const li = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = `/files/${file._id}`;
+                link.target = "_blank";
+                link.textContent = file.filename;
+                li.appendChild(link);
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', async () => {
+                    const response = await fetch(`/files/${file._id}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        alert('File deleted successfully!');
+                        loadFiles();
+                    } else {
+                        alert('File deletion failed.');
+                    }
+                });
+                li.appendChild(deleteButton);
+                fileList.appendChild(li);
+                storedFilesList.appendChild(li.cloneNode(true));
+            });
+        }
+
+        loadFiles();
+    </script>
+</body>
+</html>
