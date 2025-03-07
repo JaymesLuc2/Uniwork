@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jaymes Cardoso Ake - Assignments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #0d1b2a; /* Dark Blue */
+            color: #ffffff; /* White */
+        }
+        header {
+            background-color: #0d1b2a; /* Dark Blue */
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #ffffff; /* White */
+        }
+        .container {
+            display: flex;
+            padding: 20px;
+        }
+        .buttons {
+            flex: 1;
+            background-color: #0d1b2a; /* Dark Blue */
+            padding: 20px;
+            margin-right: 20px;
+        }
+        .buttons ul {
+            list-style: none;
+            padding: 0;
+        }
+        .buttons li {
+            margin: 10px 0;
+        }
+        .buttons button {
+            background-color: #ffcf00; /* Yellow */
+            border: none;
+            color: #0d1b2a; /* Dark Blue */
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+        }
+        .upload-section {
+            margin-bottom: 20px;
+        }
+        .secondary-page, .third-page {
+            display: none;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .secondary-page {
+            background-color: #4b0082; /* Purple */
+            color: #ffffff; /* White */
+        }
+        .third-page {
+            background-color: #808080; /* Grey */
+            color: #ffffff; /* White */
+        }
+        .show {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Jaymes Cardoso-Ake</h1>
+    </header>
+    <div class="container">
+        <div class="buttons">
+            <div class="upload-section">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <input type="file" id="fileInput" name="file" accept="application/pdf" required>
+                    <select id="assignmentSelect" required>
+                        <option value="" disabled selected>Select Assignment</option>
+                        <option value="1">Assignment 1</option>
+                        <option value="2">Assignment 2</option>
+                        <option value="3">Assignment 3</option>
+                        <option value="4">Assignment 4</option>
+                        <option value="5">Assignment 5</option>
+                        <option value="6">Assignment 6</option>
+                        <option value="7">Assignment 7</option>
+                        <option value="8">Assignment 8</option>
+                        <option value="9">Assignment 9</option>
+                        <option value="10">Assignment 10</option>
+                    </select>
+                    <button type="submit">Upload PDF</button>
+                </form>
+            </div>
+            <ul>
+                <li><button onclick="openSecondaryPage(1)">Assignment 1</button></li>
+                <li><button onclick="openSecondaryPage(2)">Assignment 2</button></li>
+                <li><button onclick="openSecondaryPage(3)">Assignment 3</button></li>
+                <li><button onclick="openSecondaryPage(4)">Assignment 4</button></li>
+                <li><button onclick="openSecondaryPage(5)">Assignment 5</button></li>
+                <li><button onclick="openSecondaryPage(6)">Assignment 6</button></li>
+                <li><button onclick="openSecondaryPage(7)">Assignment 7</button></li>
+                <li><button onclick="openSecondaryPage(8)">Assignment 8</button></li>
+                <li><button onclick="openSecondaryPage(9)">Assignment 9</button></li>
+                <li><button onclick="openSecondaryPage(10)">Assignment 10</button></li>
+            </ul>
+        </div>
+        <div class="secondary-page" id="secondaryPage">
+            <div>
+                <h1>Welcome to the Secondary Page</h1>
+                <p>This page has a purple and white background.</p>
+                <a id="openFileLink" href="#" target="_blank" style="color: #ffcf00;">Open File</a>
+                <br><br>
+                <a href="#" onclick="closeSecondaryPage()" style="color: #ffcf00;">Back to Main Page</a>
+            </div>
+        </div>
+        <div class="third-page" id="thirdPage">
+            <div>
+                <h1>Password</h1>
+                <input type="password" id="passwordInput" placeholder="Enter password">
+                <button onclick="verifyPassword()">Submit</button>
+                <br><br>
+                <a href="#" onclick="closeThirdPage()" style="color: #ffcf00;">Back to Main Page</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        let pdfFiles = {};
+        let currentFileUrl = '';
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const assignmentNumber = document.getElementById('assignmentSelect').value;
+            const file = document.getElementById('fileInput').files[0];
+
+            if (file && assignmentNumber) {
+                const fileUrl = URL.createObjectURL(file);
+                pdfFiles[assignmentNumber] = fileUrl;
+                currentFileUrl = fileUrl;
+                openThirdPage();
+            } else {
+                alert('Please select a file and an assignment.');
+            }
+        });
+
+        function openSecondaryPage(assignmentNumber) {
+            const secondaryPage = document.getElementById('secondaryPage');
+            const openFileLink = document.getElementById('openFileLink');
+            if (pdfFiles[assignmentNumber]) {
+                openFileLink.href = pdfFiles[assignmentNumber];
+                openFileLink.style.display = 'block';
+            } else {
+                openFileLink.style.display = 'none';
+                alert('No PDF linked to this assignment.');
+            }
+            secondaryPage.classList.add('show');
+        }
+
+        function closeSecondaryPage() {
+            document.getElementById('secondaryPage').classList.remove('show');
+        }
+
+        function openThirdPage() {
+            document.getElementById('thirdPage').classList.add('show');
+        }
+
+        function closeThirdPage() {
+            document.getElementById('thirdPage').classList.remove('show');
+        }
+
+        function verifyPassword() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === '5588') {
+                window.open(currentFileUrl, '_blank');
+                closeThirdPage();
+            } else {
+                alert('Incorrect password.');
+            }
+        }
+    </script>
+</body>
+</html>
