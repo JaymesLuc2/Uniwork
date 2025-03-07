@@ -25,42 +25,30 @@
             color: #ffffff;
         }
         .container {
-            display: flex;
-            flex-direction: row;
-            width: 100%;
-        }
-        .main-content {
-            flex: 3;
             padding: 20px;
         }
-        .assignments, .files {
-            flex: 1;
-            background-color: #1b263b;
-            padding: 20px;
-            margin-left: 20px;
-        }
-        .assignments h2, .files h2 {
-            color: #ffffff;
-        }
-        .assignments ul, .files ul {
-            list-style: none;
-            padding: 0;
-        }
-        .assignments li, .files li {
-            background-color: #0d1b2a;
-            margin: 10px 0;
+        #pdfLink {
+            display: none;
+            margin-top: 20px;
             padding: 10px;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .assignments li button, .files li button {
-            background-color: #e63946;
-            border: none;
+            background-color: #4b0082;
             color: #ffffff;
-            cursor: pointer;
-            padding: 5px 10px;
+            text-decoration: none;
             border-radius: 5px;
+        }
+        .pdf-container {
+            display: none;
+            margin-top: 20px;
+            width: 100%;
+            height: 80vh;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .pdf-container iframe {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
@@ -69,18 +57,15 @@
         <h1>Jaymes Cardoso Ake</h1>
     </header>
     <div class="container">
-        <section class="assignments">
-            <h2>The Assignments</h2>
-            <form id="uploadForm" enctype="multipart/form-data">
-                <input type="file" name="file" required>
-                <button type="submit">Upload</button>
-            </form>
-            <ul id="fileList"></ul>
-        </section>
-        <section class="files">
-            <h2>Files</h2>
-            <ul id="storedFilesList"></ul>
-        </section>
+        <h2>The Assignments</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" name="file" accept="application/pdf" required>
+            <button type="submit">Upload</button>
+        </form>
+        <a id="pdfLink" target="_blank">Open PDF</a>
+        <div class="pdf-container" id="pdfContainer">
+            <iframe id="pdfFrame" src="" frameborder="0"></iframe>
+        </div>
     </div>
     <script>
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
@@ -91,47 +76,18 @@
                 body: formData
             });
             if (response.ok) {
-                alert('File uploaded successfully!');
-                loadFiles();
+                const data = await response.json();
+                const pdfLink = document.getElementById('pdfLink');
+                const pdfContainer = document.getElementById('pdfContainer');
+                const pdfFrame = document.getElementById('pdfFrame');
+                pdfLink.href = `/files/${encodeURIComponent(data.filename)}`;
+                pdfLink.style.display = 'block';
+                pdfContainer.style.display = 'block';
+                pdfFrame.src = `/files/${encodeURIComponent(data.filename)}`;
             } else {
                 alert('File upload failed.');
             }
         });
-
-        async function loadFiles() {
-            const response = await fetch('/files');
-            const files = await response.json();
-            const fileList = document.getElementById('fileList');
-            const storedFilesList = document.getElementById('storedFilesList');
-            fileList.innerHTML = '';
-            storedFilesList.innerHTML = '';
-            files.forEach(file => {
-                const li = document.createElement('li');
-                const link = document.createElement('a');
-                link.href = `/files/${file._id}`;
-                link.target = "_blank";
-                link.textContent = file.filename;
-                li.appendChild(link);
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete';
-                deleteButton.addEventListener('click', async () => {
-                    const response = await fetch(`/files/${file._id}`, {
-                        method: 'DELETE'
-                    });
-                    if (response.ok) {
-                        alert('File deleted successfully!');
-                        loadFiles();
-                    } else {
-                        alert('File deletion failed.');
-                    }
-                });
-                li.appendChild(deleteButton);
-                fileList.appendChild(li);
-                storedFilesList.appendChild(li.cloneNode(true));
-            });
-        }
-
-        loadFiles();
     </script>
 </body>
 </html>
