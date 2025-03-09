@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Define the path to your HTML file
-const filePath = path.join(__dirname, 'path/to/jaymesUniwork3html.html');
+const filePath = path.join(__dirname, 'jaymesUniwork3.html');
 
 // Create an HTTP server
 const server = http.createServer((req, res) => {
