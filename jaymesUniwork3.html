@@ -24,6 +24,7 @@
             padding: 10px;
             border: none;
             cursor: pointer;
+            margin-right: 10px;
         }
         .hidden {
             display: none;
@@ -34,6 +35,15 @@
         iframe {
             width: 100%;
             height: 400px;
+        }
+        .pdf-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .pdf-link a {
+            color: yellow;
         }
     </style>
     <script>
@@ -48,11 +58,11 @@
 
             const pdfInput = document.getElementById(`pdfInput-${assignmentId}`);
             const files = pdfInput.files;
+            let storedFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentId}`)) || [];
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    let storedFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentId}`)) || [];
                     storedFiles.push({ name: file.name, data: e.target.result });
                     localStorage.setItem(`assignment-${assignmentId}`, JSON.stringify(storedFiles));
                     alert('PDF linked successfully!');
@@ -71,46 +81,68 @@
                 linkContainer.innerHTML = ''; // Clear previous links
                 
                 storedFiles.forEach((file, index) => {
+                    const pdfLinkDiv = document.createElement('div');
+                    pdfLinkDiv.classList.add('pdf-link');
+
                     const linkElement = document.createElement('a');
                     linkElement.href = file.data;
                     linkElement.textContent = file.name;
                     linkElement.target = '_blank';
-                    linkContainer.appendChild(linkElement);
+                    pdfLinkDiv.appendChild(linkElement);
                     
                     const viewButton = document.createElement('button');
-                    viewButton.textContent = `View ${file.name}`;
+                    viewButton.textContent = 'View Assignment Storage';
                     viewButton.onclick = function() {
-                        viewAssignment(id, index);
+                        viewAssignment(id);
                     };
-                    linkContainer.appendChild(viewButton);
+                    pdfLinkDiv.appendChild(viewButton);
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.onclick = function() {
+                        deletePdfLink(id, index);
+                    };
+                    pdfLinkDiv.appendChild(deleteButton);
+
+                    linkContainer.appendChild(pdfLinkDiv);
                 });
             });
         }
 
-        function viewAssignment(id, fileIndex) {
+        function viewAssignment(id) {
             const storedFiles = JSON.parse(localStorage.getItem(`assignment-${id}`)) || [];
-            const file = storedFiles[fileIndex];
-            if (file) {
-                const pdfFrame = document.getElementById('pdfFrame');
-                pdfFrame.src = file.data;
-                const pdfContainer = document.getElementById('pdfContainer');
-                pdfContainer.dataset.id = id;
-                pdfContainer.dataset.index = fileIndex;
-                pdfContainer.classList.remove('hidden');
-                document.getElementById('fileName').textContent = file.name;
-            }
+            const pdfContainer = document.getElementById('pdfContainer');
+            pdfContainer.innerHTML = ''; // Clear previous content
+            storedFiles.forEach((file, index) => {
+                const pdfLinkDiv = document.createElement('div');
+                pdfLinkDiv.classList.add('pdf-link');
+
+                const linkElement = document.createElement('a');
+                linkElement.href = file.data;
+                linkElement.textContent = file.name;
+                linkElement.target = '_blank';
+                pdfLinkDiv.appendChild(linkElement);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = function() {
+                    deletePdfLink(id, index);
+                };
+                pdfLinkDiv.appendChild(deleteButton);
+
+                pdfContainer.appendChild(pdfLinkDiv);
+            });
+            pdfContainer.dataset.id = id;
+            pdfContainer.classList.remove('hidden');
         }
 
-        function deletePdfLink() {
-            const pdfContainer = document.getElementById('pdfContainer');
-            const assignmentId = pdfContainer.dataset.id;
-            const fileIndex = Number(pdfContainer.dataset.index);
+        function deletePdfLink(assignmentId, fileIndex) {
             let storedFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentId}`)) || [];
             storedFiles.splice(fileIndex, 1);
             localStorage.setItem(`assignment-${assignmentId}`, JSON.stringify(storedFiles));
             alert('PDF link deleted successfully!');
-            pdfContainer.classList.add('hidden');
             loadPdfLinks();
+            viewAssignment(assignmentId);
         }
 
         function togglePasswordVisibility(assignmentId) {
@@ -173,11 +205,7 @@
     </div>
 
     <div id="pdfContainer" class="pdf-container hidden">
-        <h2>Assignment Details</h2>
-        <p id="fileName"></p>
-        <iframe id="pdfFrame"></iframe>
-        <br>
-        <button onclick="deletePdfLink()">Delete PDF</button>
+        <h2>Assignment Storage</h2>
     </div>
 </body>
 </html>
