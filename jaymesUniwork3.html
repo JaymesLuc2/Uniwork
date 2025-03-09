@@ -45,6 +45,15 @@
         .pdf-link a {
             color: yellow;
         }
+        .storage-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: yellow;
+            color: darkblue;
+            border: none;
+            cursor: pointer;
+        }
     </style>
     <script>
         const uploadPassword = "5588"; // Set the password here
@@ -106,6 +115,15 @@
 
                     linkContainer.appendChild(pdfLinkDiv);
                 });
+
+                if (storedFiles.length > 0) {
+                    const openPdfButton = document.createElement('button');
+                    openPdfButton.textContent = 'Open Linked PDF';
+                    openPdfButton.onclick = function() {
+                        window.open(storedFiles[0].data, '_blank');
+                    };
+                    linkContainer.appendChild(openPdfButton);
+                }
             });
         }
 
@@ -157,6 +175,14 @@
             }
         }
 
+        function submitPassword(assignmentId) {
+            savePdfLink(assignmentId);
+        }
+
+        function openStoragePage() {
+            window.location.href = 'storage.html';
+        }
+
         document.addEventListener('DOMContentLoaded', loadPdfLinks);
     </script>
 </head>
@@ -168,7 +194,7 @@
         <input type="file" id="pdfInput-1" accept="application/pdf" multiple>
         <input type="password" id="passwordInput-1" placeholder="Enter password">
         <button id="togglePassword-1" onclick="togglePasswordVisibility(1)">Show</button>
-        <button onclick="savePdfLink(1)">Link PDF</button>
+        <button onclick="submitPassword(1)">Submit Password</button>
         <div class="link-container"></div>
     </div>
     <div class="assignment" data-id="2">
@@ -176,7 +202,7 @@
         <input type="file" id="pdfInput-2" accept="application/pdf" multiple>
         <input type="password" id="passwordInput-2" placeholder="Enter password">
         <button id="togglePassword-2" onclick="togglePasswordVisibility(2)">Show</button>
-        <button onclick="savePdfLink(2)">Link PDF</button>
+        <button onclick="submitPassword(2)">Submit Password</button>
         <div class="link-container"></div>
     </div>
     <div class="assignment" data-id="3">
@@ -184,7 +210,7 @@
         <input type="file" id="pdfInput-3" accept="application/pdf" multiple>
         <input type="password" id="passwordInput-3" placeholder="Enter password">
         <button id="togglePassword-3" onclick="togglePasswordVisibility(3)">Show</button>
-        <button onclick="savePdfLink(3)">Link PDF</button>
+        <button onclick="submitPassword(3)">Submit Password</button>
         <div class="link-container"></div>
     </div>
     <div class="assignment" data-id="4">
@@ -192,7 +218,7 @@
         <input type="file" id="pdfInput-4" accept="application/pdf" multiple>
         <input type="password" id="passwordInput-4" placeholder="Enter password">
         <button id="togglePassword-4" onclick="togglePasswordVisibility(4)">Show</button>
-        <button onclick="savePdfLink(4)">Link PDF</button>
+        <button onclick="submitPassword(4)">Submit Password</button>
         <div class="link-container"></div>
     </div>
     <div class="assignment" data-id="5">
@@ -200,12 +226,90 @@
         <input type="file" id="pdfInput-5" accept="application/pdf" multiple>
         <input type="password" id="passwordInput-5" placeholder="Enter password">
         <button id="togglePassword-5" onclick="togglePasswordVisibility(5)">Show</button>
-        <button onclick="savePdfLink(5)">Link PDF</button>
+        <button onclick="submitPassword(5)">Submit Password</button>
         <div class="link-container"></div>
     </div>
+
+    <button class="storage-button" onclick="openStoragePage()">Open Storage</button>
 
     <div id="pdfContainer" class="pdf-container hidden">
         <h2>Assignment Storage</h2>
     </div>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage</title>
+    <style>
+        body {
+            background-color: grey;
+            color: yellow;
+            font-family: Arial, sans-serif;
+        }
+        .pdf-container {
+            margin: 20px;
+        }
+        .pdf-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .pdf-link a {
+            color: yellow;
+        }
+        button {
+            background-color: yellow;
+            color: darkblue;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        function loadStorage() {
+            const pdfContainer = document.getElementById('pdfContainer');
+            pdfContainer.innerHTML = ''; // Clear previous content
+            for (let id = 1; id <= 5; id++) {
+                const storedFiles = JSON.parse(localStorage.getItem(`assignment-${id}`)) || [];
+                storedFiles.forEach((file, index) => {
+                    const pdfLinkDiv = document.createElement('div');
+                    pdfLinkDiv.classList.add('pdf-link');
+
+                    const linkElement = document.createElement('a');
+                    linkElement.href = file.data;
+                    linkElement.textContent = `Assignment ${id}: ${file.name}`;
+                    linkElement.target = '_blank';
+                    pdfLinkDiv.appendChild(linkElement);
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.onclick = function() {
+                        deletePdfLink(id, index);
+                    };
+                    pdfLinkDiv.appendChild(deleteButton);
+
+                    pdfContainer.appendChild(pdfLinkDiv);
+                });
+            }
+        }
+
+        function deletePdfLink(assignmentId, fileIndex) {
+            let storedFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentId}`)) || [];
+            storedFiles.splice(fileIndex, 1);
+            localStorage.setItem(`assignment-${assignmentId}`, JSON.stringify(storedFiles));
+            alert('PDF link deleted successfully!');
+            loadStorage();
+        }
+
+        document.addEventListener('DOMContentLoaded', loadStorage);
+    </script>
+</head>
+<body>
+    <h1>PDF Storage</h1>
+    <div id="pdfContainer" class="pdf-container"></div>
 </body>
 </html>
