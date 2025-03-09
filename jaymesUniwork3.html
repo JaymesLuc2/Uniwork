@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +6,7 @@
     <title>Assignments</title>
     <style>
         body {
-            background: linear-gradient(45deg, darkblue, white);
+            background: linear-gradient(45deg, darkblue, purple);
             color: yellow;
             font-family: Arial, sans-serif;
         }
@@ -48,12 +47,14 @@
             }
 
             const pdfInput = document.getElementById(`pdfInput-${assignmentId}`);
-            const file = pdfInput.files[0];
-            if (file) {
+            const files = pdfInput.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    localStorage.setItem(`assignment-${assignmentId}`, e.target.result);
-                    localStorage.setItem(`assignment-${assignmentId}-name`, file.name);
+                    let storedFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentId}`)) || [];
+                    storedFiles.push({ name: file.name, data: e.target.result });
+                    localStorage.setItem(`assignment-${assignmentId}`, JSON.stringify(storedFiles));
                     alert('PDF linked successfully!');
                     loadPdfLinks(); // Refresh the links after saving
                 };
@@ -65,45 +66,48 @@
             const assignments = document.querySelectorAll('.assignment');
             assignments.forEach(assignment => {
                 const id = assignment.dataset.id;
-                const link = localStorage.getItem(`assignment-${id}`);
+                const storedFiles = JSON.parse(localStorage.getItem(`assignment-${id}`)) || [];
                 const linkContainer = assignment.querySelector('.link-container');
                 linkContainer.innerHTML = ''; // Clear previous links
                 
-                if (link) {
+                storedFiles.forEach((file, index) => {
                     const linkElement = document.createElement('a');
-                    linkElement.href = link;
-                    linkElement.textContent = 'View PDF';
+                    linkElement.href = file.data;
+                    linkElement.textContent = file.name;
                     linkElement.target = '_blank';
                     linkContainer.appendChild(linkElement);
                     
                     const viewButton = document.createElement('button');
-                    viewButton.textContent = 'View Assignment';
+                    viewButton.textContent = `View ${file.name}`;
                     viewButton.onclick = function() {
-                        viewAssignment(id);
+                        viewAssignment(id, index);
                     };
                     linkContainer.appendChild(viewButton);
-                }
+                });
             });
         }
 
-        function viewAssignment(id) {
-            const link = localStorage.getItem(`assignment-${id}`);
-            const fileName = localStorage.getItem(`assignment-${id}-name`);
-            if (link) {
+        function viewAssignment(id, fileIndex) {
+            const storedFiles = JSON.parse(localStorage.getItem(`assignment-${id}`)) || [];
+            const file = storedFiles[fileIndex];
+            if (file) {
                 const pdfFrame = document.getElementById('pdfFrame');
-                pdfFrame.src = link;
+                pdfFrame.src = file.data;
                 const pdfContainer = document.getElementById('pdfContainer');
                 pdfContainer.dataset.id = id;
+                pdfContainer.dataset.index = fileIndex;
                 pdfContainer.classList.remove('hidden');
-                document.getElementById('fileName').textContent = fileName;
+                document.getElementById('fileName').textContent = file.name;
             }
         }
 
         function deletePdfLink() {
             const pdfContainer = document.getElementById('pdfContainer');
             const assignmentId = pdfContainer.dataset.id;
-            localStorage.removeItem(`assignment-${assignmentId}`);
-            localStorage.removeItem(`assignment-${assignmentId}-name`);
+            const fileIndex = Number(pdfContainer.dataset.index);
+            let storedFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentId}`)) || [];
+            storedFiles.splice(fileIndex, 1);
+            localStorage.setItem(`assignment-${assignmentId}`, JSON.stringify(storedFiles));
             alert('PDF link deleted successfully!');
             pdfContainer.classList.add('hidden');
             loadPdfLinks();
@@ -129,7 +133,7 @@
     <h1>Assignments</h1>
     <div class="assignment" data-id="1">
         <h2>Assignment 1</h2>
-        <input type="file" id="pdfInput-1" accept="application/pdf">
+        <input type="file" id="pdfInput-1" accept="application/pdf" multiple>
         <input type="password" id="passwordInput-1" placeholder="Enter password">
         <button id="togglePassword-1" onclick="togglePasswordVisibility(1)">Show</button>
         <button onclick="savePdfLink(1)">Link PDF</button>
@@ -137,7 +141,7 @@
     </div>
     <div class="assignment" data-id="2">
         <h2>Assignment 2</h2>
-        <input type="file" id="pdfInput-2" accept="application/pdf">
+        <input type="file" id="pdfInput-2" accept="application/pdf" multiple>
         <input type="password" id="passwordInput-2" placeholder="Enter password">
         <button id="togglePassword-2" onclick="togglePasswordVisibility(2)">Show</button>
         <button onclick="savePdfLink(2)">Link PDF</button>
@@ -145,7 +149,7 @@
     </div>
     <div class="assignment" data-id="3">
         <h2>Assignment 3</h2>
-        <input type="file" id="pdfInput-3" accept="application/pdf">
+        <input type="file" id="pdfInput-3" accept="application/pdf" multiple>
         <input type="password" id="passwordInput-3" placeholder="Enter password">
         <button id="togglePassword-3" onclick="togglePasswordVisibility(3)">Show</button>
         <button onclick="savePdfLink(3)">Link PDF</button>
@@ -153,7 +157,7 @@
     </div>
     <div class="assignment" data-id="4">
         <h2>Assignment 4</h2>
-        <input type="file" id="pdfInput-4" accept="application/pdf">
+        <input type="file" id="pdfInput-4" accept="application/pdf" multiple>
         <input type="password" id="passwordInput-4" placeholder="Enter password">
         <button id="togglePassword-4" onclick="togglePasswordVisibility(4)">Show</button>
         <button onclick="savePdfLink(4)">Link PDF</button>
@@ -161,7 +165,7 @@
     </div>
     <div class="assignment" data-id="5">
         <h2>Assignment 5</h2>
-        <input type="file" id="pdfInput-5" accept="application/pdf">
+        <input type="file" id="pdfInput-5" accept="application/pdf" multiple>
         <input type="password" id="passwordInput-5" placeholder="Enter password">
         <button id="togglePassword-5" onclick="togglePasswordVisibility(5)">Show</button>
         <button onclick="savePdfLink(5)">Link PDF</button>
