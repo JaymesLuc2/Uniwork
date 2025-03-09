@@ -54,6 +54,15 @@
             border: none;
             cursor: pointer;
         }
+        #storagePage {
+            display: none;
+            background-color: grey;
+            color: yellow;
+            padding: 20px;
+        }
+        #mainPage {
+            display: block;
+        }
     </style>
     <script>
         const uploadPassword = "5588"; // Set the password here
@@ -120,11 +129,26 @@
                     const openPdfButton = document.createElement('button');
                     openPdfButton.textContent = 'Open Linked PDF';
                     openPdfButton.onclick = function() {
-                        window.open(storedFiles[0].data, '_blank');
+                        openPdfFile(id);
                     };
                     linkContainer.appendChild(openPdfButton);
                 }
             });
+        }
+
+        function openPdfFile(assignmentId) {
+            const passwordInput = document.getElementById(`passwordInput-${assignmentId}`).value;
+            if (passwordInput !== uploadPassword) {
+                alert('Incorrect password. Access denied.');
+                return;
+            }
+
+            const storedFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentId}`)) || [];
+            if (storedFiles.length > 0) {
+                window.open(storedFiles[0].data, '_blank');
+            } else {
+                alert('No PDF linked to this assignment.');
+            }
         }
 
         function viewAssignment(id) {
@@ -180,98 +204,13 @@
         }
 
         function openStoragePage() {
-            window.location.href = 'storage.html';
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById('storagePage').style.display = 'block';
+            loadStorage();
         }
 
-        document.addEventListener('DOMContentLoaded', loadPdfLinks);
-    </script>
-</head>
-<body>
-    <div id="header">Jaymes Cardoso Ake</div>
-    <h1>Assignments</h1>
-    <div class="assignment" data-id="1">
-        <h2>Assignment 1</h2>
-        <input type="file" id="pdfInput-1" accept="application/pdf" multiple>
-        <input type="password" id="passwordInput-1" placeholder="Enter password">
-        <button id="togglePassword-1" onclick="togglePasswordVisibility(1)">Show</button>
-        <button onclick="submitPassword(1)">Submit Password</button>
-        <div class="link-container"></div>
-    </div>
-    <div class="assignment" data-id="2">
-        <h2>Assignment 2</h2>
-        <input type="file" id="pdfInput-2" accept="application/pdf" multiple>
-        <input type="password" id="passwordInput-2" placeholder="Enter password">
-        <button id="togglePassword-2" onclick="togglePasswordVisibility(2)">Show</button>
-        <button onclick="submitPassword(2)">Submit Password</button>
-        <div class="link-container"></div>
-    </div>
-    <div class="assignment" data-id="3">
-        <h2>Assignment 3</h2>
-        <input type="file" id="pdfInput-3" accept="application/pdf" multiple>
-        <input type="password" id="passwordInput-3" placeholder="Enter password">
-        <button id="togglePassword-3" onclick="togglePasswordVisibility(3)">Show</button>
-        <button onclick="submitPassword(3)">Submit Password</button>
-        <div class="link-container"></div>
-    </div>
-    <div class="assignment" data-id="4">
-        <h2>Assignment 4</h2>
-        <input type="file" id="pdfInput-4" accept="application/pdf" multiple>
-        <input type="password" id="passwordInput-4" placeholder="Enter password">
-        <button id="togglePassword-4" onclick="togglePasswordVisibility(4)">Show</button>
-        <button onclick="submitPassword(4)">Submit Password</button>
-        <div class="link-container"></div>
-    </div>
-    <div class="assignment" data-id="5">
-        <h2>Assignment 5</h2>
-        <input type="file" id="pdfInput-5" accept="application/pdf" multiple>
-        <input type="password" id="passwordInput-5" placeholder="Enter password">
-        <button id="togglePassword-5" onclick="togglePasswordVisibility(5)">Show</button>
-        <button onclick="submitPassword(5)">Submit Password</button>
-        <div class="link-container"></div>
-    </div>
-
-    <button class="storage-button" onclick="openStoragePage()">Open Storage</button>
-
-    <div id="pdfContainer" class="pdf-container hidden">
-        <h2>Assignment Storage</h2>
-    </div>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storage</title>
-    <style>
-        body {
-            background-color: grey;
-            color: yellow;
-            font-family: Arial, sans-serif;
-        }
-        .pdf-container {
-            margin: 20px;
-        }
-        .pdf-link {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        .pdf-link a {
-            color: yellow;
-        }
-        button {
-            background-color: yellow;
-            color: darkblue;
-            padding: 10px;
-            border: none;
-            cursor: pointer;
-        }
-    </style>
-    <script>
         function loadStorage() {
-            const pdfContainer = document.getElementById('pdfContainer');
+            const pdfContainer = document.getElementById('storagePdfContainer');
             pdfContainer.innerHTML = ''; // Clear previous content
             for (let id = 1; id <= 5; id++) {
                 const storedFiles = JSON.parse(localStorage.getItem(`assignment-${id}`)) || [];
@@ -305,11 +244,67 @@
             loadStorage();
         }
 
-        document.addEventListener('DOMContentLoaded', loadStorage);
+        document.addEventListener('DOMContentLoaded', loadPdfLinks);
     </script>
 </head>
 <body>
-    <h1>PDF Storage</h1>
-    <div id="pdfContainer" class="pdf-container"></div>
+    <div id="header">Jaymes Cardoso Ake</div>
+
+    <!-- Main Page -->
+    <div id="mainPage">
+        <h1>Assignments</h1>
+        <div class="assignment" data-id="1">
+            <h2>Assignment 1</h2>
+            <input type="file" id="pdfInput-1" accept="application/pdf" multiple>
+            <input type="password" id="passwordInput-1" placeholder="Enter password">
+            <button id="togglePassword-1" onclick="togglePasswordVisibility(1)">Show</button>
+            <button onclick="submitPassword(1)">Upload PDF</button>
+            <div class="link-container"></div>
+        </div>
+        <div class="assignment" data-id="2">
+            <h2>Assignment 2</h2>
+            <input type="file" id="pdfInput-2" accept="application/pdf" multiple>
+            <input type="password" id="passwordInput-2" placeholder="Enter password">
+            <button id="togglePassword-2" onclick="togglePasswordVisibility(2)">Show</button>
+            <button onclick="submitPassword(2)">Upload PDF</button>
+            <div class="link-container"></div>
+        </div>
+        <div class="assignment" data-id="3">
+            <h2>Assignment 3</h2>
+            <input type="file" id="pdfInput-3" accept="application/pdf" multiple>
+            <input type="password" id="passwordInput-3" placeholder="Enter password">
+            <button id="togglePassword-3" onclick="togglePasswordVisibility(3)">Show</button>
+            <button onclick="submitPassword(3)">Upload PDF</button>
+            <div class="link-container"></div>
+        </div>
+        <div class="assignment" data-id="4">
+            <h2>Assignment 4</h2>
+            <input type="file" id="pdfInput-4" accept="application/pdf" multiple>
+            <input type="password" id="passwordInput-4" placeholder="Enter password">
+            <button id="togglePassword-4" onclick="togglePasswordVisibility(4)">Show</button>
+            <button onclick="submitPassword(4)">Upload PDF</button>
+            <div class="link-container"></div>
+        </div>
+        <div class="assignment" data-id="5">
+            <h2>Assignment 5</h2>
+            <input type="file" id="pdfInput-5" accept="application/pdf" multiple>
+            <input type="password" id="passwordInput-5" placeholder="Enter password">
+            <button id="togglePassword-5" onclick="togglePasswordVisibility(5)">Show</button>
+            <button onclick="submitPassword(5)">Upload PDF</button>
+            <div class="link-container"></div>
+        </div>
+
+        <button class="storage-button" onclick="openStoragePage()">Open Storage</button>
+    </div>
+
+    <!-- Storage Page -->
+    <div id="storagePage">
+        <h1>PDF Storage</h1>
+        <div id="storagePdfContainer" class="pdf-container"></div>
+    </div>
+
+    <div id="pdfContainer" class="pdf-container hidden">
+        <h2>Assignment Storage</h2>
+    </div>
 </body>
 </html>
