@@ -170,6 +170,8 @@
         let currentFileUrl = '';
         let currentAssignmentNumber = '';
         let currentFileName = '';
+        let fileToDeleteUrl = '';
+        let fileToDeleteAssignmentNumber = '';
 
         document.getElementById('uploadForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -214,7 +216,7 @@
                 pdfItem.className = 'pdf-item';
                 pdfItem.innerHTML = `
                     <a href="${pdf.url}" target="_blank">${pdf.name}</a>
-                    <button class="delete-button" onclick="deletePdf(${assignmentNumber}, '${pdf.url}')">Delete</button>
+                    <button class="delete-button" onclick="promptDeletePdf(${assignmentNumber}, '${pdf.url}')">Delete</button>
                 `;
                 pdfList.appendChild(pdfItem);
             });
@@ -270,6 +272,12 @@
             } else {
                 alert('No PDF file selected.');
             }
+        }
+
+        function promptDeletePdf(assignmentNumber, fileUrl) {
+            fileToDeleteAssignmentNumber = assignmentNumber;
+            fileToDeleteUrl = fileUrl;
+            openThirdPage();
         }
 
         function deletePdf(assignmentNumber, fileUrl) {
