@@ -237,23 +237,34 @@
             document.getElementById('passwordInput').value = '';
         }
 
-        function verifyPassword() {
-            const password = document.getElementById('passwordInput').value;
-            if (password === '5588') {
-                if (currentAssignmentNumber === 'upload-pdf') {
-                    window.open(currentFileUrl, '_blank');
-                } else {
-                    // Store the file URL and name in local storage
-                    const pdfFiles = JSON.parse(localStorage.getItem(`assignment-${currentAssignmentNumber}-pdfs`) || '[]');
-                    pdfFiles.push({ url: currentFileUrl, name: currentFileName });
-                    localStorage.setItem(`assignment-${currentAssignmentNumber}-pdfs`, JSON.stringify(pdfFiles));
-                    alert('File uploaded and linked to Assignment ' + currentAssignmentNumber);
-                }
-                closeThirdPage();
-            } else {
-                alert('Incorrect password.');
-            }
+       function verifyPassword() {
+    const password = document.getElementById('passwordInput').value;
+    if (password === '5588') {
+        if (currentAssignmentNumber === 'upload-pdf') {
+            window.open(currentFileUrl, '_blank');
+        } else {
+            // Store the file URL and name in local storage
+            const pdfFiles = JSON.parse(localStorage.getItem(`assignment-${currentAssignmentNumber}-pdfs`) || '[]');
+            const fileLink = `https://github.com/JaymesLuc2/Uniwork/raw/main/${currentFileName}`;
+            pdfFiles.push({ url: fileLink, name: currentFileName });
+            localStorage.setItem(`assignment-${currentAssignmentNumber}-pdfs`, JSON.stringify(pdfFiles));
+            alert('File uploaded and linked to Assignment ' + currentAssignmentNumber);
         }
+        closeThirdPage();
+    } else {
+        alert('Incorrect password.');
+    }
+}
+
+function openSelectedFile() {
+    const openFileButton = document.getElementById('openFileButton');
+    const fileUrl = openFileButton.dataset.fileUrl;
+    if (fileUrl) {
+        window.open(fileUrl, '_blank');
+    } else {
+        alert('No PDF file selected.');
+    }
+}
 
         document.getElementById('togglePassword').addEventListener('change', function () {
             const passwordInput = document.getElementById('passwordInput');
