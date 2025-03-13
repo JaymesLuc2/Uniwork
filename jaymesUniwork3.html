@@ -13,7 +13,7 @@
             color: #ffffff; /* White */
         }
         header {
-            background-color: #0d1b2a; /* Dark Blue */
+            background-color: #0d1b2a;
             padding: 10px 20px;
             display: flex;
             align-items: center;
@@ -22,7 +22,7 @@
         header h1 {
             margin: 0;
             font-size: 24px;
-            color: #ffffff; /* White */
+            color: #ffffff;
         }
         .container {
             display: flex;
@@ -30,57 +30,35 @@
         }
         .buttons {
             flex: 1;
-            background-color: #0d1b2a; /* Dark Blue */
             padding: 20px;
             margin-right: 20px;
         }
-        .buttons ul {
-            list-style: none;
-            padding: 0;
-        }
-        .buttons li {
-            margin: 10px 0;
-        }
         .buttons button {
-            background-color: #ffcf00; /* Yellow */
+            background-color: #ffcf00;
             border: none;
-            color: #0d1b2a; /* Dark Blue */
+            color: #0d1b2a;
             cursor: pointer;
             padding: 10px;
             width: 100%;
             border-radius: 5px;
         }
-        .upload-section {
-            margin-bottom: 20px;
-        }
         .secondary-page, .third-page {
             display: none;
-            height: 100vh;
+            position: fixed;
+            width: 100%;
+            height: 100%;
             justify-content: center;
             align-items: center;
             flex-direction: column;
         }
         .secondary-page {
-            background-color: #4b0082; /* Purple */
-            color: #ffffff; /* White */
+            background-color: #4b0082;
         }
         .third-page {
-            background-color: #808080; /* Grey */
-            color: #ffffff; /* White */
+            background-color: #808080;
         }
         .show {
             display: flex;
-        }
-        .open-file-button {
-            background-color: #006400; /* Dark Green */
-            color: #ffcf00; /* Yellow */
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .open-file-button:hover {
-            background-color: #004d00; /* Darker Green */
         }
         .pdf-list {
             margin-top: 20px;
@@ -92,13 +70,13 @@
             margin: 10px 0;
         }
         .pdf-item a {
-            color: #ffffff; /* White */
+            color: #ffffff;
             text-decoration: none;
         }
         .delete-button {
-            background-color: #ff0000; /* Red */
+            background-color: #ff0000;
             border: none;
-            color: #ffffff; /* White */
+            color: #ffffff;
             cursor: pointer;
             padding: 5px 10px;
             border-radius: 5px;
@@ -116,187 +94,138 @@
                     <input type="file" id="fileInput" name="file" accept="application/pdf" required>
                     <select id="assignmentSelect" required>
                         <option value="" disabled selected>Select Assignment</option>
-                        <option value="upload-pdf">Upload PDF</option>
                         <option value="1">Assignment 1</option>
                         <option value="2">Assignment 2</option>
                         <option value="3">Assignment 3</option>
                         <option value="4">Assignment 4</option>
-                        <option value="5">Assignment 5</option>
-                        <option value="6">Assignment 6</option>
-                        <option value="7">Assignment 7</option>
-                        <option value="8">Assignment 8</option>
-                        <option value="9">Assignment 9</option>
-                        <option value="10">Assignment 10</option>
                     </select>
                     <button type="submit">Upload PDF</button>
                 </form>
             </div>
             <ul>
-                <li><button onclick="openSecondaryPage(1)">Logistics assignments 2165621</button></li>
+               <li><button onclick="openSecondaryPage(1)">Logistics Assignments 2165621</button></li>
                 <li><button onclick="openSecondaryPage(2)">Assignment 2</button></li>
                 <li><button onclick="openSecondaryPage(3)">Assignment 3</button></li>
                 <li><button onclick="openSecondaryPage(4)">Assignment 4</button></li>
-                <li><button onclick="openSecondaryPage(5)">Assignment 5</button></li>
-                <li><button onclick="openSecondaryPage(6)">Assignment 6</button></li>
-                <li><button onclick="openSecondaryPage(7)">Assignment 7</button></li>
-                <li><button onclick="openSecondaryPage(8)">Assignment 8</button></li>
-                <li><button onclick="openSecondaryPage(9)">Assignment 9</button></li>
-                <li><button onclick="openSecondaryPage(10)">Assignment 10</button></li>
             </ul>
         </div>
+
+        <!-- Secondary Page (Assignment Page) -->
         <div class="secondary-page" id="secondaryPage">
-            <div>
-                <h1 id="assignmentTitle"></h1>
-                <button id="openFileButton" class="open-file-button" onclick="openSelectedFile()">Open File</button>
-                <br><br>
-                <div class="pdf-list" id="pdfList">
-                    <!-- PDF items will be added here dynamically -->
-                </div>
-                <a href="#" onclick="closeSecondaryPage()" style="color: #ffcf00;">Back to Main Page</a>
-            </div>
+            <h1 id="assignmentTitle"></h1>
+            <div class="pdf-list" id="pdfList"></div>
+            <a href="#" onclick="closeSecondaryPage()" style="color: #ffcf00;">Back</a>
         </div>
+
+        <!-- Third Page (Password Page) -->
         <div class="third-page" id="thirdPage">
-            <div>
-                <h1>Password</h1>
-                <input type="password" id="passwordInput" placeholder="Enter password">
-                <input type="checkbox" id="togglePassword"> Show Password
-                <button onclick="verifyPassword()">Submit</button>
-                <br><br>
-                <a href="#" onclick="closeThirdPage()" style="color: #ffcf00;">Back to Main Page</a>
-            </div>
+            <h1>Password</h1>
+            <input type="password" id="passwordInput" placeholder="Enter password">
+            <input type="checkbox" id="togglePassword"> Show Password
+            <button onclick="verifyPassword()">Submit</button>
+            <a href="#" onclick="closeThirdPage()" style="color: #ffcf00;">Back</a>
         </div>
     </div>
+
     <script>
-        let currentFileUrl = '';
-        let currentAssignmentNumber = '';
-        let currentFileName = '';
-        let fileToDeleteUrl = '';
-        let fileToDeleteAssignmentNumber = '';
+    let currentFileName = '';
+    let currentAssignmentNumber = '';
+    let actionType = ''; 
+    let fileToDeleteUrl = '';
+    let fileToDeleteAssignmentNumber = '';
 
-        document.getElementById('uploadForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('fileInput');
-            const assignmentSelect = document.getElementById('assignmentSelect');
-            const file = fileInput.files[0];
-            const assignmentNumber = assignmentSelect.value;
+    document.getElementById('uploadForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('fileInput');
+        const assignmentSelect = document.getElementById('assignmentSelect');
+        const file = fileInput.files[0];
+        const assignmentNumber = assignmentSelect.value;
 
-            if (file && assignmentNumber) {
-                const fileUrl = URL.createObjectURL(file);
-                currentFileUrl = fileUrl;
-                currentAssignmentNumber = assignmentNumber;
-                currentFileName = file.name;
-                openThirdPage();
-            } else {
-                alert('Please select a file and an assignment.');
-            }
+        if (file && assignmentNumber) {
+            currentFileName = file.name;
+            currentAssignmentNumber = assignmentNumber;
+            actionType = 'upload';
+            openThirdPage();
+        } else {
+            alert('Please select a file and an assignment.');
+        }
+    });
+
+    function openSecondaryPage(assignmentNumber) {
+        const secondaryPage = document.getElementById('secondaryPage');
+        const assignmentTitle = document.getElementById('assignmentTitle');
+        const pdfList = document.getElementById('pdfList');
+
+        assignmentTitle.textContent = `Assignment ${assignmentNumber}`;
+        pdfList.innerHTML = ''; 
+
+        const pdfFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-pdfs`) || '[]');
+        pdfFiles.forEach((pdf) => {
+            const pdfItem = document.createElement('div');
+            pdfItem.className = 'pdf-item';
+            pdfItem.innerHTML = `
+                <a href="${pdf.url}" target="_blank">${pdf.name}</a>
+                <button class="delete-button" onclick="confirmDelete(${assignmentNumber}, '${pdf.url}')">Delete</button>
+            `;
+            pdfList.appendChild(pdfItem);
         });
 
-        function openSecondaryPage(assignmentNumber) {
-            const secondaryPage = document.getElementById('secondaryPage');
-            const assignmentTitle = document.getElementById('assignmentTitle');
-            const openFileButton = document.getElementById('openFileButton');
-            const pdfList = document.getElementById('pdfList');
+        secondaryPage.classList.add('show');
+    }
 
-            assignmentTitle.textContent = `Assignment ${assignmentNumber} *`;
-            const storedFileUrl = localStorage.getItem(`assignment-${assignmentNumber}`);
-            if (storedFileUrl) {
-                openFileButton.dataset.fileUrl = storedFileUrl;
-                openFileButton.disabled = false;
-            } else {
-                openFileButton.dataset.fileUrl = '';
-                openFileButton.disabled = true;
-                alert('No PDF linked to this assignment.');
+    function closeSecondaryPage() {
+        document.getElementById('secondaryPage').classList.remove('show');
+    }
+
+    function openThirdPage() {
+        document.getElementById('thirdPage').classList.add('show');
+    }
+
+    function closeThirdPage() {
+        document.getElementById('thirdPage').classList.remove('show');
+        document.getElementById('passwordInput').value = '';
+    }
+
+    function verifyPassword() {
+        const password = document.getElementById('passwordInput').value;
+        if (password === '5588') {
+            if (actionType === 'upload') {
+                uploadFile();
+            } else if (actionType === 'delete') {
+                deletePdf(fileToDeleteAssignmentNumber, fileToDeleteUrl);
             }
-
-            // Load PDF files for the assignment
-            pdfList.innerHTML = ''; // Clear previous items
-            const pdfFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-pdfs`) || '[]');
-            pdfFiles.forEach((pdf) => {
-                const pdfItem = document.createElement('div');
-                pdfItem.className = 'pdf-item';
-                pdfItem.innerHTML = `
-                    <a href="${pdf.url}" target="_blank">${pdf.name}</a>
-                    <button class="delete-button" onclick="promptDeletePdf(${assignmentNumber}, '${pdf.url}')">Delete</button>
-                `;
-                pdfList.appendChild(pdfItem);
-            });
-
-            secondaryPage.classList.add('show');
-        }
-
-        function closeSecondaryPage() {
-            document.getElementById('secondaryPage').classList.remove('show');
-        }
-
-        function openThirdPage() {
-            document.getElementById('thirdPage').classList.add('show');
-        }
-
-        function closeThirdPage() {
-            document.getElementById('thirdPage').classList.remove('show');
-            document.getElementById('passwordInput').value = '';
-        }
-
-       function verifyPassword() {
-    const password = document.getElementById('passwordInput').value;
-    if (password === '5588') {
-        if (currentAssignmentNumber === 'upload-pdf') {
-            window.open(currentFileUrl, '_blank');
         } else {
-            // Store the file URL and name in local storage
-            const pdfFiles = JSON.parse(localStorage.getItem(`assignment-${currentAssignmentNumber}-pdfs`) || '[]');
-            const fileLink = `https://github.com/JaymesLuc2/Uniwork/raw/main/${currentFileName}`;
-            pdfFiles.push({ url: fileLink, name: currentFileName });
-            localStorage.setItem(`assignment-${currentAssignmentNumber}-pdfs`, JSON.stringify(pdfFiles));
-            alert('File uploaded and linked to Assignment ' + currentAssignmentNumber);
+            alert('Incorrect password.');
         }
         closeThirdPage();
-    } else {
-        alert('Incorrect password.');
     }
-}
 
-function openSelectedFile() {
-    const openFileButton = document.getElementById('openFileButton');
-    const fileUrl = openFileButton.dataset.fileUrl;
-    if (fileUrl) {
-        window.open(fileUrl, '_blank');
-    } else {
-        alert('No PDF file selected.');
+    function uploadFile() {
+        const pdfFiles = JSON.parse(localStorage.getItem(`assignment-${currentAssignmentNumber}-pdfs`) || '[]');
+        const fileLink = `https://github.com/JaymesLuc2/Uniwork/raw/main/${currentFileName}`;
+        pdfFiles.push({ url: fileLink, name: currentFileName });
+        localStorage.setItem(`assignment-${currentAssignmentNumber}-pdfs`, JSON.stringify(pdfFiles));
+        alert('File uploaded successfully.');
     }
-}
 
-        document.getElementById('togglePassword').addEventListener('change', function () {
-            const passwordInput = document.getElementById('passwordInput');
-            if (this.checked) {
-                passwordInput.type = 'text';
-            } else {
-                passwordInput.type = 'password';
-            }
-        });
+    function confirmDelete(assignmentNumber, fileUrl) {
+        fileToDeleteAssignmentNumber = assignmentNumber;
+        fileToDeleteUrl = fileUrl;
+        actionType = 'delete';
+        openThirdPage();
+    }
 
-        function openSelectedFile() {
-            const openFileButton = document.getElementById('openFileButton');
-            const fileUrl = openFileButton.dataset.fileUrl;
-            if (fileUrl) {
-                window.open(fileUrl, '_blank');
-            } else {
-                alert('No PDF file selected.');
-            }
-        }
+    function deletePdf(assignmentNumber, fileUrl) {
+        let pdfFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-pdfs`) || '[]');
+        pdfFiles = pdfFiles.filter(pdf => pdf.url !== fileUrl);
+        localStorage.setItem(`assignment-${assignmentNumber}-pdfs`, JSON.stringify(pdfFiles));
+        alert('File deleted successfully.');
+        openSecondaryPage(assignmentNumber);
+    }
 
-        function promptDeletePdf(assignmentNumber, fileUrl) {
-            fileToDeleteAssignmentNumber = assignmentNumber;
-            fileToDeleteUrl = fileUrl;
-            openThirdPage();
-        }
-
-        function deletePdf(assignmentNumber, fileUrl) {
-            let pdfFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-pdfs`) || '[]');
-            pdfFiles = pdfFiles.filter(pdf => pdf.url !== fileUrl);
-            localStorage.setItem(`assignment-${assignmentNumber}-pdfs`, JSON.stringify(pdfFiles));
-            openSecondaryPage(assignmentNumber); // Refresh the list
-        }
+    document.getElementById('togglePassword').addEventListener('change', function () {
+        document.getElementById('passwordInput').type = this.checked ? 'text' : 'password';
+    });
     </script>
 </body>
 </html>
