@@ -91,7 +91,7 @@
         <div class="buttons">
             <div class="upload-section">
                 <form id="uploadForm" enctype="multipart/form-data">
-                    <input type="file" id="fileInput" name="file" accept="application/pdf" required>
+                    <input type="file" id="fileInput" name="file" required>
                     <select id="assignmentSelect" required>
                         <option value="" disabled selected>Select Assignment</option>
                         <option value="1">Assignment 1</option>
@@ -99,7 +99,7 @@
                         <option value="3">Assignment 3</option>
                         <option value="4">Assignment 4</option>
                     </select>
-                    <button type="submit">Upload PDF</button>
+                    <button type="submit">Upload File</button>
                 </form>
             </div>
             <ul>
@@ -134,7 +134,7 @@
     let fileToDeleteUrl = '';
     let fileToDeleteAssignmentNumber = '';
 
-    document.getElementById('uploadForm').addEventListener('submit', (e) => {
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fileInput = document.getElementById('fileInput');
         const assignmentSelect = document.getElementById('assignmentSelect');
@@ -142,7 +142,7 @@
         const assignmentNumber = assignmentSelect.value;
 
         if (file && assignmentNumber) {
-            currentFileName = file.name;
+            currentFileName = `assignment-${assignmentNumber}-${file.name}`;
             currentAssignmentNumber = assignmentNumber;
             actionType = 'upload';
             openThirdPage();
@@ -151,31 +151,98 @@
         }
     });
 
-    function openSecondaryPage(assignmentNumber) {
+    async function uploadFile() {
+        const file = document.getElementById('fileInput').files[0];
+        const reader = new FileReader();
+        reader.onload = async function (event) {
+            const fileContent = event.target.result.split(',')[1]; // Get base64 part of the file content
+
+            const response = await fetch(`https://api.github.com/repos/JaymesLuc2/Uniwork/contents/${currentFileName}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer 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`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Add ${currentFileName} for assignment ${currentAssignmentNumber}`,
+                    content: fileContent
+                })
+            });
+
+            if (response.ok) {
+                alert('File uploaded successfully.');
+            } else {
+                const errorData = await response.json();
+                alert(`Failed to upload file: ${errorData.message}`);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function openSecondaryPage(assignmentNumber) {
         const secondaryPage = document.getElementById('secondaryPage');
         const assignmentTitle = document.getElementById('assignmentTitle');
         const pdfList = document.getElementById('pdfList');
 
         assignmentTitle.textContent = `Assignment ${assignmentNumber}`;
-        pdfList.innerHTML = ''; 
+        pdfList.innerHTML = '';
 
-        const pdfFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-pdfs`) || '[]');
-        pdfFiles.forEach((pdf) => {
-            const pdfItem = document.createElement('div');
-            pdfItem.className = 'pdf-item';
-            pdfItem.innerHTML = `
-                <a href="${pdf.url}" target="_blank">${pdf.name}</a>
-                <button class="delete-button" onclick="confirmDelete(${assignmentNumber}, '${pdf.url}')">Delete</button>
-            `;
-            pdfList.appendChild(pdfItem);
+        const response = await fetch(`https://api.github.com/repos/JaymesLuc2/Uniwork/contents`);
+        const files = await response.json();
+
+        files.forEach((file) => {
+            if (file.name.startsWith(`assignment-${assignmentNumber}-`)) {
+                const pdfItem = document.createElement('div');
+                pdfItem.className = 'pdf-item';
+                pdfItem.innerHTML = `
+                    <a href="${file.download_url}" target="_blank">${file.name}</a>
+                    <button class="delete-button" onclick="confirmDelete(${assignmentNumber}, '${file.path}')">Delete</button>
+                `;
+                pdfList.appendChild(pdfItem);
+            }
         });
 
         secondaryPage.classList.add('show');
     }
 
-    function closeSecondaryPage() {
-        document.getElementById('secondaryPage').classList.remove('show');
+    async function deletePdf(assignmentNumber, filePath) {
+        const response = await fetch(`https://api.github.com/repos/JaymesLuc2/Uniwork/contents/${filePath}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer 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`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `Delete ${filePath}`,
+                sha: await getFileSHA(filePath)
+            })
+        });
+
+        if (response.ok) {
+            alert('File deleted successfully.');
+            openSecondaryPage(assignmentNumber);
+        } else {
+            const errorData = await response.json();
+            alert(`Failed to delete file: ${errorData.message}`);
+        }
     }
+
+    async function getFileSHA(filePath) {
+        const response = await fetch(`https://api.github.com/repos/JaymesLuc2/Uniwork/contents/${filePath}`);
+        const fileData = await response.json();
+        return fileData.sha;
+    }
+
+    function confirmDelete(assignmentNumber, filePath) {
+        fileToDeleteAssignmentNumber = assignmentNumber;
+        fileToDeleteUrl = filePath;
+        actionType = 'delete';
+        openThirdPage();
+    }
+
+    document.getElementById('togglePassword').addEventListener('change', function () {
+        document.getElementById('passwordInput').type = this.checked ? 'text' : 'password';
+    });
 
     function openThirdPage() {
         document.getElementById('thirdPage').classList.add('show');
@@ -200,32 +267,9 @@
         closeThirdPage();
     }
 
-    function uploadFile() {
-        const pdfFiles = JSON.parse(localStorage.getItem(`assignment-${currentAssignmentNumber}-pdfs`) || '[]');
-        const fileLink = `https://github.com/JaymesLuc2/Uniwork/raw/main/${currentFileName}`;
-        pdfFiles.push({ url: fileLink, name: currentFileName });
-        localStorage.setItem(`assignment-${currentAssignmentNumber}-pdfs`, JSON.stringify(pdfFiles));
-        alert('File uploaded successfully.');
+    function closeSecondaryPage() {
+        document.getElementById('secondaryPage').classList.remove('show');
     }
-
-    function confirmDelete(assignmentNumber, fileUrl) {
-        fileToDeleteAssignmentNumber = assignmentNumber;
-        fileToDeleteUrl = fileUrl;
-        actionType = 'delete';
-        openThirdPage();
-    }
-
-    function deletePdf(assignmentNumber, fileUrl) {
-        let pdfFiles = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-pdfs`) || '[]');
-        pdfFiles = pdfFiles.filter(pdf => pdf.url !== fileUrl);
-        localStorage.setItem(`assignment-${assignmentNumber}-pdfs`, JSON.stringify(pdfFiles));
-        alert('File deleted successfully.');
-        openSecondaryPage(assignmentNumber);
-    }
-
-    document.getElementById('togglePassword').addEventListener('change', function () {
-        document.getElementById('passwordInput').type = this.checked ? 'text' : 'password';
-    });
     </script>
 </body>
 </html>
