@@ -81,6 +81,16 @@
             top: -5px;
             border-left-color: #000;
         }
+        .arrow.vertical.up::after {
+            top: -10px;
+            left: -5px;
+            border-bottom-color: #000;
+        }
+        .arrow.horizontal.left::after {
+            left: -10px;
+            top: -5px;
+            border-right-color: #000;
+        }
         #controls {
             margin-top: 20px;
         }
@@ -118,6 +128,8 @@
             <button onclick="clearNodes()">Clear All Nodes</button>
             <button onclick="addVerticalArrow()">V Arrow</button>
             <button onclick="addHorizontalArrow()">H Arrow</button>
+            <button onclick="addVerticalUpArrow()">VU Arrow</button>
+            <button onclick="addHorizontalLeftArrow()">HL Arrow</button>
             <button onclick="undoAction()">Undo</button>
             <button onclick="redoAction()">Redo</button>
         </div>
@@ -170,6 +182,26 @@
         function addHorizontalArrow() {
             let arrow = document.createElement('div');
             arrow.className = 'arrow horizontal';
+            arrow.style.top = '50px';
+            arrow.style.left = '50px';
+            flowchart.appendChild(arrow);
+            makeDraggable(arrow);
+            saveAction({ type: 'add', element: arrow });
+        }
+
+        function addVerticalUpArrow() {
+            let arrow = document.createElement('div');
+            arrow.className = 'arrow vertical up';
+            arrow.style.top = '50px';
+            arrow.style.left = '50px';
+            flowchart.appendChild(arrow);
+            makeDraggable(arrow);
+            saveAction({ type: 'add', element: arrow });
+        }
+
+        function addHorizontalLeftArrow() {
+            let arrow = document.createElement('div');
+            arrow.className = 'arrow horizontal left';
             arrow.style.top = '50px';
             arrow.style.left = '50px';
             flowchart.appendChild(arrow);
