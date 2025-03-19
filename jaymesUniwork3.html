@@ -173,6 +173,7 @@
                 alert('File uploaded successfully.');
             } else {
                 const errorData = await response.json();
+                console.error('Failed to upload file:', errorData); // Added debugging output
                 alert(`Failed to upload file: ${errorData.message}`);
             }
         };
@@ -223,6 +224,7 @@
             openSecondaryPage(assignmentNumber);
         } else {
             const errorData = await response.json();
+            console.error('Failed to delete file:', errorData); // Added debugging output
             alert(`Failed to delete file: ${errorData.message}`);
         }
     }
