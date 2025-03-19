@@ -50,12 +50,17 @@
             color: #fff;
             border-radius: 5px;
             cursor: move;
+            z-index: 1;
         }
         .arrow {
             position: absolute;
-            width: 2px;
-            background-color: #000;
-            cursor: pointer;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid #000;
+            cursor: move;
+            z-index: 0;
         }
         #controls {
             margin-top: 20px;
@@ -137,9 +142,8 @@
             arrow.className = 'arrow';
             arrow.style.top = '50px';
             arrow.style.left = '50px';
-            arrow.style.height = '100px';
             flowchart.appendChild(arrow);
-            makeArrowResizable(arrow);
+            makeDraggable(arrow);
             saveAction({ type: 'add', element: arrow });
         }
 
@@ -154,7 +158,7 @@
                     if (lastAction.element.className === 'node') {
                         makeDraggable(lastAction.element);
                     } else if (lastAction.element.className === 'arrow') {
-                        makeArrowResizable(lastAction.element);
+                        makeDraggable(lastAction.element);
                     }
                 } else if (lastAction.type === 'clear') {
                     lastAction.elements.forEach(element => {
@@ -162,7 +166,7 @@
                         if (element.className === 'node') {
                             makeDraggable(element);
                         } else if (element.className === 'arrow') {
-                            makeArrowResizable(element);
+                            makeDraggable(element);
                         }
                     });
                 }
@@ -178,7 +182,7 @@
                     if (lastUndo.element.className === 'node') {
                         makeDraggable(lastUndo.element);
                     } else if (lastUndo.element.className === 'arrow') {
-                        makeArrowResizable(lastUndo.element);
+                        makeDraggable(lastUndo.element);
                     }
                 } else if (lastUndo.type === 'delete') {
                     lastUndo.element.remove();
@@ -214,31 +218,6 @@
                     element.style.top = (e.clientY - offsetY) + 'px';
                 };
                 document.onmouseup = function() {
-                    document.onmousemove = null;
-                    document.onmouseup = null;
-                };
-            };
-        }
-
-        function makeArrowResizable(arrow) {
-            let isResizing = false;
-
-            arrow.onmousedown = function(e) {
-                isResizing = true;
-                let startX = e.clientX;
-                let startY = e.clientY;
-                let startHeight = parseInt(window.getComputedStyle(arrow).height);
-
-                document.onmousemove = function(e) {
-                    if (isResizing) {
-                        let currentY = e.clientY;
-                        let newHeight = startHeight + (currentY - startY);
-                        arrow.style.height = newHeight + 'px';
-                    }
-                };
-
-                document.onmouseup = function() {
-                    isResizing = false;
                     document.onmousemove = null;
                     document.onmouseup = null;
                 };
