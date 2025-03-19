@@ -54,10 +54,32 @@
         }
         .arrow {
             position: absolute;
-            width: 2px;
             background-color: #000;
             cursor: move;
             transform-origin: top left;
+        }
+        .arrow.vertical {
+            width: 2px;
+            height: 100px;
+        }
+        .arrow.horizontal {
+            height: 2px;
+            width: 100px;
+        }
+        .arrow::after {
+            content: '';
+            position: absolute;
+            border: 5px solid transparent;
+            border-top-color: #000;
+        }
+        .arrow.vertical::after {
+            top: 100%;
+            left: -6px;
+        }
+        .arrow.horizontal::after {
+            left: 100%;
+            top: -6px;
+            transform: rotate(90deg);
         }
         #controls {
             margin-top: 20px;
@@ -94,7 +116,8 @@
             <button onclick="addNode('Sold to Customer')">Sold to Customer</button>
             <button onclick="deleteSelectedNode()">Delete Selected Node</button>
             <button onclick="clearNodes()">Clear All Nodes</button>
-            <button onclick="addArrow()">Add Arrow</button>
+            <button onclick="addVerticalArrow()">V Arrow</button>
+            <button onclick="addHorizontalArrow()">H Arrow</button>
             <button onclick="undoAction()">Undo</button>
             <button onclick="redoAction()">Redo</button>
         </div>
@@ -134,15 +157,23 @@
             saveAction({ type: 'clear', elements: nodes });
         }
 
-        function addArrow() {
+        function addVerticalArrow() {
             let arrow = document.createElement('div');
-            arrow.className = 'arrow';
+            arrow.className = 'arrow vertical';
             arrow.style.top = '50px';
             arrow.style.left = '50px';
-            arrow.style.height = '100px';
             flowchart.appendChild(arrow);
             makeDraggable(arrow);
-            makeRotatable(arrow);
+            saveAction({ type: 'add', element: arrow });
+        }
+
+        function addHorizontalArrow() {
+            let arrow = document.createElement('div');
+            arrow.className = 'arrow horizontal';
+            arrow.style.top = '50px';
+            arrow.style.left = '50px';
+            flowchart.appendChild(arrow);
+            makeDraggable(arrow);
             saveAction({ type: 'add', element: arrow });
         }
 
@@ -154,20 +185,18 @@
                     lastAction.element.remove();
                 } else if (lastAction.type === 'delete') {
                     flowchart.appendChild(lastAction.element);
-                    if (lastAction.element.className === 'node') {
+                    if (lastAction.element.className.includes('node')) {
                         makeDraggable(lastAction.element);
-                    } else if (lastAction.element.className === 'arrow') {
+                    } else if (lastAction.element.className.includes('arrow')) {
                         makeDraggable(lastAction.element);
-                        makeRotatable(lastAction.element);
                     }
                 } else if (lastAction.type === 'clear') {
                     lastAction.elements.forEach(element => {
                         flowchart.appendChild(element);
-                        if (element.className === 'node') {
+                        if (element.className.includes('node')) {
                             makeDraggable(element);
-                        } else if (element.className === 'arrow') {
+                        } else if (element.className.includes('arrow')) {
                             makeDraggable(element);
-                            makeRotatable(element);
                         }
                     });
                 }
@@ -180,11 +209,10 @@
                 actionHistory.push(lastUndo);
                 if (lastUndo.type === 'add') {
                     flowchart.appendChild(lastUndo.element);
-                    if (lastUndo.element.className === 'node') {
+                    if (lastUndo.element.className.includes('node')) {
                         makeDraggable(lastUndo.element);
-                    } else if (lastUndo.element.className === 'arrow') {
+                    } else if (lastUndo.element.className.includes('arrow')) {
                         makeDraggable(lastUndo.element);
-                        makeRotatable(lastUndo.element);
                     }
                 } else if (lastUndo.type === 'delete') {
                     lastUndo.element.remove();
@@ -223,15 +251,6 @@
                     document.onmousemove = null;
                     document.onmouseup = null;
                 };
-            };
-        }
-
-        function makeRotatable(element) {
-            let rotation = 0;
-
-            element.ondblclick = function() {
-                rotation = (rotation + 45) % 360;
-                element.style.transform = `rotate(${rotation}deg)`;
             };
         }
 
