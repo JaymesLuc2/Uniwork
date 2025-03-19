@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistics Flowchart</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #add8e6; /* Light Blue */
+            color: #ffffff; /* White */
+        }
+        header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        header .label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: #fff;
+            color: #007bff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .flowchart {
+            border: 2px solid #000;
+            width: 80%;
+            height: 500px;
+            background-color: #fff;
+            position: relative;
+        }
+        .node {
+            position: absolute;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: move;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        #controls button {
+            margin: 5px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="label">Jaymes Cardoso-Ake</div>
+        <h1>Logistics Flowchart</h1>
+    </header>
+    <div class="container">
+        <div class="flowchart" id="flowchart">
+            <div class="node" style="top: 20px; left: 20px;">Supplier</div>
+            <div class="node" style="top: 200px; left: 20px;">Warehouse</div>
+            <div class="node" style="top: 200px; left: 300px;">Distribution Center</div>
+            <div class="node" style="top: 200px; left: 600px;">Retailer</div>
+            <div class="node" style="top: 400px; left: 600px;">Customer</div>
+        </div>
+        <div id="controls">
+            <button onclick="addNode('Supplier')">Supplier</button>
+            <button onclick="addNode('Manufacturing')">Manufacturing</button>
+            <button onclick="addNode('Distribution')">Distribution</button>
+            <button onclick="addNode('Direct 2 Consumer')">Direct 2 Consumer</button>
+            <button onclick="addNode('Sold to Customer')">Sold to Customer</button>
+            <button onclick="deleteSelectedNode()">Delete Selected Node</button>
+            <button onclick="clearNodes()">Clear All Nodes</button>
+            <button onclick="redoAction()">Redo</button>
+        </div>
+    </div>
+    <script>
+        let flowchart = document.getElementById('flowchart');
+        let selectedNode = null;
+        let lastAction = null;
+        let lastNode = null;
+
+        function addNode(label) {
+            let newNode = document.createElement('div');
+            newNode.className = 'node';
+            newNode.style.top = '100px';
+            newNode.style.left = '100px';
+            newNode.innerText = label;
+            flowchart.appendChild(newNode);
+            makeDraggable(newNode);
+            saveLastAction('add', newNode);
+        }
+
+        function deleteSelectedNode() {
+            if (selectedNode) {
+                saveLastAction('delete', selectedNode);
+                selectedNode.remove();
+                selectedNode = null;
+            } else {
+                alert('Please select a node to delete.');
+            }
+        }
+
+        function clearNodes() {
+            let nodes = document.querySelectorAll('.node');
+            nodes.forEach(node => {
+                node.remove();
+            });
+            saveLastAction('clear', nodes);
+        }
+
+        function redoAction() {
+            if (lastAction) {
+                if (lastAction.type === 'add') {
+                    lastAction.node.remove();
+                } else if (lastAction.type === 'delete') {
+                    flowchart.appendChild(lastAction.node);
+                    makeDraggable(lastAction.node);
+                } else if (lastAction.type === 'clear') {
+                    lastAction.nodes.forEach(node => {
+                        flowchart.appendChild(node);
+                        makeDraggable(node);
+                    });
+                }
+                lastAction = null;
+            }
+        }
+
+        function saveLastAction(type, node) {
+            lastAction = { type: type, node: node };
+            if (type === 'clear') {
+                lastAction.nodes = Array.from(node);
+            }
+        }
+
+        function makeDraggable(element) {
+            let offsetX, offsetY;
+
+            element.onclick = function() {
+                if (selectedNode) {
+                    selectedNode.style.border = '';
+                }
+                selectedNode = element;
+                selectedNode.style.border = '2px solid red';
+            };
+
+            element.onmousedown = function(e) {
+                offsetX = e.clientX - parseInt(window.getComputedStyle(element).left);
+                offsetY = e.clientY - parseInt(window.getComputedStyle(element).top);
+                document.onmousemove = function(e) {
+                    element.style.left = (e.clientX - offsetX) + 'px';
+                    element.style.top = (e.clientY - offsetY) + 'px';
+                };
+                document.onmouseup = function() {
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                };
+            };
+        }
+
+        document.querySelectorAll('.node').forEach(makeDraggable);
+    </script>
+</body>
+</html>
