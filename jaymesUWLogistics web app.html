@@ -51,6 +51,12 @@
             border-radius: 5px;
             cursor: move;
         }
+        .arrow {
+            position: absolute;
+            width: 2px;
+            background-color: #000;
+            cursor: pointer;
+        }
         #controls {
             margin-top: 20px;
         }
@@ -86,14 +92,16 @@
             <button onclick="addNode('Sold to Customer')">Sold to Customer</button>
             <button onclick="deleteSelectedNode()">Delete Selected Node</button>
             <button onclick="clearNodes()">Clear All Nodes</button>
+            <button onclick="addArrow()">Add Arrow</button>
+            <button onclick="undoAction()">Undo</button>
             <button onclick="redoAction()">Redo</button>
         </div>
     </div>
     <script>
         let flowchart = document.getElementById('flowchart');
         let selectedNode = null;
-        let lastAction = null;
-        let lastNode = null;
+        let actionHistory = [];
+        let redoStack = [];
 
         function addNode(label) {
             let newNode = document.createElement('div');
@@ -103,12 +111,12 @@
             newNode.innerText = label;
             flowchart.appendChild(newNode);
             makeDraggable(newNode);
-            saveLastAction('add', newNode);
+            saveAction({ type: 'add', element: newNode });
         }
 
         function deleteSelectedNode() {
             if (selectedNode) {
-                saveLastAction('delete', selectedNode);
+                saveAction({ type: 'delete', element: selectedNode });
                 selectedNode.remove();
                 selectedNode = null;
             } else {
@@ -117,35 +125,74 @@
         }
 
         function clearNodes() {
-            let nodes = document.querySelectorAll('.node');
+            let nodes = document.querySelectorAll('.node, .arrow');
             nodes.forEach(node => {
                 node.remove();
             });
-            saveLastAction('clear', nodes);
+            saveAction({ type: 'clear', elements: nodes });
+        }
+
+        function addArrow() {
+            let arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.style.top = '50px';
+            arrow.style.left = '50px';
+            arrow.style.height = '100px';
+            flowchart.appendChild(arrow);
+            makeArrowResizable(arrow);
+            saveAction({ type: 'add', element: arrow });
+        }
+
+        function undoAction() {
+            if (actionHistory.length > 0) {
+                let lastAction = actionHistory.pop();
+                redoStack.push(lastAction);
+                if (lastAction.type === 'add') {
+                    lastAction.element.remove();
+                } else if (lastAction.type === 'delete') {
+                    flowchart.appendChild(lastAction.element);
+                    if (lastAction.element.className === 'node') {
+                        makeDraggable(lastAction.element);
+                    } else if (lastAction.element.className === 'arrow') {
+                        makeArrowResizable(lastAction.element);
+                    }
+                } else if (lastAction.type === 'clear') {
+                    lastAction.elements.forEach(element => {
+                        flowchart.appendChild(element);
+                        if (element.className === 'node') {
+                            makeDraggable(element);
+                        } else if (element.className === 'arrow') {
+                            makeArrowResizable(element);
+                        }
+                    });
+                }
+            }
         }
 
         function redoAction() {
-            if (lastAction) {
-                if (lastAction.type === 'add') {
-                    lastAction.node.remove();
-                } else if (lastAction.type === 'delete') {
-                    flowchart.appendChild(lastAction.node);
-                    makeDraggable(lastAction.node);
-                } else if (lastAction.type === 'clear') {
-                    lastAction.nodes.forEach(node => {
-                        flowchart.appendChild(node);
-                        makeDraggable(node);
+            if (redoStack.length > 0) {
+                let lastUndo = redoStack.pop();
+                actionHistory.push(lastUndo);
+                if (lastUndo.type === 'add') {
+                    flowchart.appendChild(lastUndo.element);
+                    if (lastUndo.element.className === 'node') {
+                        makeDraggable(lastUndo.element);
+                    } else if (lastUndo.element.className === 'arrow') {
+                        makeArrowResizable(lastUndo.element);
+                    }
+                } else if (lastUndo.type === 'delete') {
+                    lastUndo.element.remove();
+                } else if (lastUndo.type === 'clear') {
+                    lastUndo.elements.forEach(element => {
+                        element.remove();
                     });
                 }
-                lastAction = null;
             }
         }
 
-        function saveLastAction(type, node) {
-            lastAction = { type: type, node: node };
-            if (type === 'clear') {
-                lastAction.nodes = Array.from(node);
-            }
+        function saveAction(action) {
+            actionHistory.push(action);
+            redoStack = [];
         }
 
         function makeDraggable(element) {
@@ -167,6 +214,31 @@
                     element.style.top = (e.clientY - offsetY) + 'px';
                 };
                 document.onmouseup = function() {
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                };
+            };
+        }
+
+        function makeArrowResizable(arrow) {
+            let isResizing = false;
+
+            arrow.onmousedown = function(e) {
+                isResizing = true;
+                let startX = e.clientX;
+                let startY = e.clientY;
+                let startHeight = parseInt(window.getComputedStyle(arrow).height);
+
+                document.onmousemove = function(e) {
+                    if (isResizing) {
+                        let currentY = e.clientY;
+                        let newHeight = startHeight + (currentY - startY);
+                        arrow.style.height = newHeight + 'px';
+                    }
+                };
+
+                document.onmouseup = function() {
+                    isResizing = false;
                     document.onmousemove = null;
                     document.onmouseup = null;
                 };
