@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -134,7 +135,7 @@
     let fileToDeleteUrl = '';
     let fileToDeleteAssignmentNumber = '';
 
-    // Pre-populate Assignment 1 with "logistics of Nike.png" and "jaymesUWLogistics web app.html"
+    // Pre-populate Assignment 1 with "logistics of Nike.png", "jaymesUWLogistics web app.html", and "2165621 Logistics flowchart.docx"
     document.addEventListener('DOMContentLoaded', () => {
         const preloadedFiles = [
             {
@@ -144,6 +145,10 @@
             {
                 url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/jaymesUWLogistics%20web%20app.html',
                 name: 'jaymesUWLogistics web app.html'
+            },
+            {
+                url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/2165621%20Logistics%20flowchart.docx',
+                name: '2165621 Logistics flowchart.docx'
             }
         ];
         localStorage.setItem('assignment-1-files', JSON.stringify(preloadedFiles));
