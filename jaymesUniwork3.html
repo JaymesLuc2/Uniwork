@@ -92,7 +92,7 @@
             <div class="upload-section">
                 <form id="uploadForm" enctype="multipart/form-data">
                     <input type="file" id="fileInput" name="file" required>
-                    <select id="assignmentSelect" name="assignmentNumber" required>
+                    <select id="assignmentSelect" required>
                         <option value="" disabled selected>Select Assignment</option>
                         <option value="1">Assignment 1</option>
                         <option value="2">Assignment 2</option>
@@ -128,53 +128,41 @@
     </div>
 
     <script>
-    const GITHUB_TOKEN = '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'; // GitHub token
-    const REPO_OWNER = 'JaymesLuc2';
-    const REPO_NAME = 'Uniwork';
-
     let currentFileName = '';
     let currentAssignmentNumber = '';
     let actionType = ''; 
     let fileToDeleteUrl = '';
     let fileToDeleteAssignmentNumber = '';
 
-    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const fileInput = document.getElementById('fileInput');
-        const file = fileInput.files[0];
-
-        if (!file) {
-            alert("Please select a file!");
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = async function (event) {
-            const fileContent = event.target.result.split(',')[1]; // Base64 content
-
-            const response = await fetch("http://localhost:3000/upload", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    fileName: file.name,
-                    fileContent: fileContent
-                })
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                alert("File uploaded successfully: " + result.url);
-            } else {
-                alert("Upload failed: " + result.error);
+    // Pre-populate Assignment 1 with "logistics of Nike.png" and "jaymesUWLogistics web app.html"
+    document.addEventListener('DOMContentLoaded', () => {
+        const preloadedFiles = [
+            {
+                url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/logistics%20of%20Nike.png',
+                name: 'logistics of Nike.png'
+            },
+            {
+                url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/jaymesUWLogistics%20web%20app.html',
+                name: 'jaymesUWLogistics web app.html'
             }
-        };
-        reader.readAsDataURL(file);
+        ];
+        localStorage.setItem('assignment-1-files', JSON.stringify(preloadedFiles));
     });
 
-    function storeFileLink(assignmentNumber, fileUrl) {
-        const files = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-files`) || '[]');
-        files.push({ url: fileUrl, name: currentFileName });
-        localStorage.setItem(`assignment-${assignmentNumber}-files`, JSON.stringify(files));
+    document.getElementById('uploadForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        openThirdPage('upload'); // Open the password check page and set actionType to 'upload'
+    });
+
+    function saveFileToLocalStorage(file, assignmentNumber) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const fileContent = event.target.result;
+            const files = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-files`) || '[]');
+            files.push({ url: fileContent, name: file.name });
+            localStorage.setItem(`assignment-${assignmentNumber}-files`, JSON.stringify(files));
+        };
+        reader.readAsDataURL(file);
     }
 
     function openSecondaryPage(assignmentNumber) {
@@ -203,7 +191,8 @@
         document.getElementById('secondaryPage').classList.remove('show');
     }
 
-    function openThirdPage() {
+    function openThirdPage(type) {
+        actionType = type;
         document.getElementById('thirdPage').classList.add('show');
     }
 
@@ -214,9 +203,21 @@
 
     function verifyPassword() {
         const password = document.getElementById('passwordInput').value;
-        if (password === '5588') {
+        if (password === '5599') {
             if (actionType === 'upload') {
-                alert('File uploaded successfully.');
+                const fileInput = document.getElementById('fileInput');
+                const assignmentSelect = document.getElementById('assignmentSelect');
+                const file = fileInput.files[0];
+                const assignmentNumber = assignmentSelect.value;
+
+                if (file && assignmentNumber) {
+                    currentFileName = file.name;
+                    currentAssignmentNumber = assignmentNumber;
+                    saveFileToLocalStorage(file, assignmentNumber);
+                    alert('File uploaded successfully.');
+                } else {
+                    alert('Please select a file and an assignment.');
+                }
             } else if (actionType === 'delete') {
                 deleteFile(fileToDeleteAssignmentNumber, fileToDeleteUrl);
             }
