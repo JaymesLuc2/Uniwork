@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -135,7 +134,7 @@
     let fileToDeleteUrl = '';
     let fileToDeleteAssignmentNumber = '';
 
-    // Pre-populate Assignment 1 with "logistics of Nike.png", "jaymesUWLogistics web app.html", and "2165621 Logistics flowchart.docx"
+    // Preload assignment files
     document.addEventListener('DOMContentLoaded', () => {
         const preloadedFiles = [
             {
@@ -156,7 +155,7 @@
 
     document.getElementById('uploadForm').addEventListener('submit', (e) => {
         e.preventDefault();
-        openThirdPage('upload'); // Open the password check page and set actionType to 'upload'
+        openThirdPage('upload');
     });
 
     function saveFileToLocalStorage(file, assignmentNumber) {
@@ -171,11 +170,7 @@
     }
 
     function openSecondaryPage(assignmentNumber) {
-        const secondaryPage = document.getElementById('secondaryPage');
-        const assignmentTitle = document.getElementById('assignmentTitle');
         const fileList = document.getElementById('fileList');
-
-        assignmentTitle.textContent = `Assignment ${assignmentNumber}`;
         fileList.innerHTML = ''; 
 
         const files = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-files`) || '[]');
@@ -183,16 +178,13 @@
             const fileItem = document.createElement('div');
             fileItem.className = 'file-item';
             fileItem.innerHTML = `
-                <a href="${file.url}" target="_blank">
-                    ${file.name.endsWith('.html') ? 'Open Web App' : file.name}
-                </a>
-                ${file.name === 'jaymesUWLogistics web app.html' ? '<br><a href="https://jaymesluc2.github.io/Uniwork/jaymesUWLogistics%20web%20app.html" target="_blank">Open jaymesUWLogistics web app</a>' : ''}
+                <a href="${file.url}" target="_blank">${file.name}</a>
                 <button class="delete-button" onclick="confirmDelete(${assignmentNumber}, '${file.url}')">Delete</button>
             `;
             fileList.appendChild(fileItem);
         });
 
-        secondaryPage.classList.add('show');
+        document.getElementById('secondaryPage').classList.add('show');
     }
 
     function closeSecondaryPage() {
@@ -219,8 +211,6 @@
                 const assignmentNumber = assignmentSelect.value;
 
                 if (file && assignmentNumber) {
-                    currentFileName = file.name;
-                    currentAssignmentNumber = assignmentNumber;
                     saveFileToLocalStorage(file, assignmentNumber);
                     alert('File uploaded successfully.');
                 } else {
@@ -238,8 +228,7 @@
     function confirmDelete(assignmentNumber, fileUrl) {
         fileToDeleteAssignmentNumber = assignmentNumber;
         fileToDeleteUrl = fileUrl;
-        actionType = 'delete';
-        openThirdPage();
+        openThirdPage('delete');
     }
 
     function deleteFile(assignmentNumber, fileUrl) {
@@ -249,10 +238,7 @@
         alert('File deleted successfully.');
         openSecondaryPage(assignmentNumber);
     }
-
-    document.getElementById('togglePassword').addEventListener('change', function () {
-        document.getElementById('passwordInput').type = this.checked ? 'text' : 'password';
-    });
     </script>
 </body>
 </html>
+
