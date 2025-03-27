@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Data Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
+        #output { margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+        th, td { border: 1px solid black; padding: 5px; text-align: left; }
+        canvas { max-width: 600px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>CSV Data Analysis</h1>
+    <input type="file" id="csvFile" accept=".csv">
+    <button onclick="loadCSV()">Upload & Process</button>
+
+    <h3>Dataset Preview</h3>
+    <div id="output"></div>
+
+    <h3>Ask a Question:</h3>
+    <select id="questionSelect">
+        <option value="q1">Which supplier has the highest average lead time?</option>
+        <option value="q2">What transportation mode has the lowest average lead time?</option>
+        <option value="q3">Which month shows the highest average delays in delivery?</option>
+        <option value="q4">What type of disruption leads to the longest average delay?</option>
+        <option value="q5">Which product category experiences the shortest average lead time?</option>
+    </select>
+    <button onclick="answerQuestion()">Get Answer</button>
+
+    <h3>Answer:</h3>
+    <p id="answerText"></p>
+    <canvas id="chart"></canvas>
+
+    <script>
+        let dataset = [];
+        let chartInstance = null;
+
+        function loadCSV() {
+            const fileInput = document.getElementById("csvFile");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please upload a CSV file.");
+                return;
+            }
+
+            Papa.parse(file, {
+                complete: function(results) {
+                    dataset = results.data;
+                    console.log("Parsed Dataset:", dataset);
+                    displayDataset();
+                },
+                header: true,
+                skipEmptyLines: true
+            });
+        }
+
+        function displayDataset() {
+            if (dataset.length === 0) {
+                document.getElementById("output").innerHTML = "No data found.";
+                return;
+            }
+
+            let tableHTML = "<table><tr>";
+            Object.keys(dataset[0]).forEach(key => tableHTML += `<th>${key}</th>`);
+            tableHTML += "</tr>";
+
+            for (let i = 0; i < Math.min(5, dataset.length); i++) {
+                tableHTML += "<tr>";
+                Object.values(dataset[i]).forEach(value => tableHTML += `<td>${value}</td>`);
+                tableHTML += "</tr>";
+            }
+
+            tableHTML += "</table>";
+            document.getElementById("output").innerHTML = tableHTML;
+        }
+
+        function answerQuestion() {
+            if (dataset.length === 0) {
+                alert("Please upload a CSV file first.");
+                return;
+            }
+
+            const question = document.getElementById("questionSelect").value;
+            let answer = "";
+            let labels = [];
+            let values = [];
+
+            dataset.forEach(row => {
+                row.Lead_Time = parseFloat(row["Lead_Time"]) || 0;
+                row.Delivery_Delay = parseFloat(row["Delivery_Delay"]) || 0;
+            });
+
+            if (question === "q1") {
+                const suppliers = {};
+                dataset.forEach(row => {
+                    if (!row.Supplier) return;
+                    if (!suppliers[row.Supplier]) suppliers[row.Supplier] = [];
+                    suppliers[row.Supplier].push(row.Lead_Time);
+                });
+
+                for (const supplier in suppliers) {
+                    suppliers[supplier] = suppliers[supplier].reduce((a, b) => a + b, 0) / suppliers[supplier].length;
+                }
+
+                const maxSupplier = Object.keys(suppliers).reduce((a, b) => suppliers[a] > suppliers[b] ? a : b, "");
+                answer = `The supplier with the highest average lead time is ${maxSupplier}.`;
+                labels = Object.keys(suppliers);
+                values = Object.values(suppliers);
+            }
+
+            if (question === "q2") {
+                const transportModes = {};
+                dataset.forEach(row => {
+                    if (!row.Transportation_Mode) return;
+                    if (!transportModes[row.Transportation_Mode]) transportModes[row.Transportation_Mode] = [];
+                    transportModes[row.Transportation_Mode].push(row.Lead_Time);
+                });
+
+                for (const mode in transportModes) {
+                    transportModes[mode] = transportModes[mode].reduce((a, b) => a + b, 0) / transportModes[mode].length;
+                }
+
+                const minMode = Object.keys(transportModes).reduce((a, b) => transportModes[a] < transportModes[b] ? a : b, "");
+                answer = `The transportation mode with the lowest average lead time is ${minMode}.`;
+                labels = Object.keys(transportModes);
+                values = Object.values(transportModes);
+            }
+
+            if (question === "q3") {
+                const months = {};
+                dataset.forEach(row => {
+                    if (!row.Order_Date) return;
+                    const month = new Date(row.Order_Date).getMonth() + 1;
+                    if (!months[month]) months[month] = [];
+                    months[month].push(row.Delivery_Delay);
+                });
+
+                for (const month in months) {
+                    months[month] = months[month].reduce((a, b) => a + b, 0) / months[month].length;
+                }
+
+                const worstMonth = Object.keys(months).reduce((a, b) => months[a] > months[b] ? a : b, "");
+                answer = `The month with the highest average delays is month ${worstMonth}.`;
+                labels = Object.keys(months);
+                values = Object.values(months);
+            }
+
+            if (question === "q4") {
+                const disruptions = {};
+                dataset.forEach(row => {
+                    if (!row.Disruption_Type) return;
+                    if (!disruptions[row.Disruption_Type]) disruptions[row.Disruption_Type] = [];
+                    disruptions[row.Disruption_Type].push(row.Delivery_Delay);
+                });
+
+                for (const type in disruptions) {
+                    disruptions[type] = disruptions[type].reduce((a, b) => a + b, 0) / disruptions[type].length;
+                }
+
+                const worstDisruption = Object.keys(disruptions).reduce((a, b) => disruptions[a] > disruptions[b] ? a : b, "");
+                answer = `The disruption type leading to the longest delay is ${worstDisruption}.`;
+                labels = Object.keys(disruptions);
+                values = Object.values(disruptions);
+            }
+
+            if (question === "q5") {
+                const categories = {};
+                dataset.forEach(row => {
+                    if (!row.Product_Category) return;
+                    if (!categories[row.Product_Category]) categories[row.Product_Category] = [];
+                    categories[row.Product_Category].push(row.Lead_Time);
+                });
+
+                for (const category in categories) {
+                    categories[category] = categories[category].reduce((a, b) => a + b, 0) / categories[category].length;
+                }
+
+                const bestCategory = Object.keys(categories).reduce((a, b) => categories[a] < categories[b] ? a : b, "");
+                answer = `The product category with the shortest average lead time is ${bestCategory}.`;
+                labels = Object.keys(categories);
+                values = Object.values(categories);
+            }
+
+            document.getElementById("answerText").textContent = answer;
+            renderChart(labels, values);
+        }
+
+        function renderChart(labels, values) {
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById("chart").getContext("2d");
+            chartInstance = new Chart(ctx, {
+                type: "bar",
+                data: { labels, datasets: [{ label: "Average Days", data: values, backgroundColor: "blue" }] },
+                options: { responsive: true }
+            });
+        }
+    </script>
+</body>
+</html>
+
