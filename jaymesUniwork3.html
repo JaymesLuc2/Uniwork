@@ -142,12 +142,16 @@
                 name: 'logistics of Nike.png'
             },
             {
-                url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/jaymesUWLogistics%20web%20app.html',
+                url: 'https://jaymesluc2.github.io/Uniwork/jaymesUWLogistics%20web%20app.html',
                 name: 'jaymesUWLogistics web app.html'
             },
             {
                 url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/2165621%20Logistics%20flowchart.docx',
                 name: '2165621 Logistics flowchart.docx'
+            },
+            {
+                url: 'https://jaymesluc2.github.io/Uniwork/Logistics%20web%20based%20analysis1.html',
+                name: 'Logistics web based analysis1.html'
             }
         ];
         localStorage.setItem('assignment-1-files', JSON.stringify(preloadedFiles));
@@ -182,6 +186,24 @@
                 <button class="delete-button" onclick="confirmDelete(${assignmentNumber}, '${file.url}')">Delete</button>
             `;
             fileList.appendChild(fileItem);
+
+            if (file.name === 'jaymesUWLogistics web app.html') {
+                const linkItem = document.createElement('div');
+                linkItem.className = 'file-item';
+                linkItem.innerHTML = `
+                    <a href="${file.url}" target="_blank">Open jaymesUWLogistics web app</a>
+                `;
+                fileList.appendChild(linkItem);
+            }
+
+            if (file.name === 'Logistics web based analysis1.html') {
+                const linkItem = document.createElement('div');
+                linkItem.className = 'file-item';
+                linkItem.innerHTML = `
+                    <a href="${file.url}" target="_blank">Open Logistics web based analysis1</a>
+                `;
+                fileList.appendChild(linkItem);
+            }
         });
 
         document.getElementById('secondaryPage').classList.add('show');
