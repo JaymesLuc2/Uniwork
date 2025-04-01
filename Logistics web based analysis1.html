@@ -7,11 +7,66 @@
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
-        #output { margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-        th, td { border: 1px solid black; padding: 5px; text-align: left; }
-        canvas { max-width: 600px; margin-top: 20px; }
+        /* Global Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: black;
+            color: white;
+            text-align: center;
+        }
+
+        h1, h3 {
+            color: #98FF98; /* Mint Green */
+        }
+
+        #output {
+            margin-top: 20px;
+        }
+
+        /* Table Style */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 12px;
+            color: black;
+            background-color: #98FF98; /* Mint Green */
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #98FF98;
+            color: black;
+        }
+
+        td {
+            background-color: white;
+        }
+
+        /* Chart Styles */
+        canvas {
+            max-width: 600px;
+            margin-top: 20px;
+        }
+
+        select, button {
+            background-color: #98FF98; /* Mint Green */
+            color: black;
+            border: 1px solid #333;
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        select:hover, button:hover {
+            background-color: #7fffd4; /* Lighter Mint Green */
+        }
     </style>
 </head>
 <body>
@@ -30,6 +85,10 @@
         <option value="q3">Which month shows the highest average delays in delivery?</option>
         <option value="q4">What type of disruption leads to the longest average delay?</option>
         <option value="q5">Which product category experiences the shortest average lead time?</option>
+        <option value="q6">Which mode of transportation contributes most significantly to delays?</option>
+        <option value="q7">Are there seasonal patterns affecting lead times?</option>
+        <option value="q8">Compare monthly customer demand vs. order quantities (Bullwhip Effect)</option>
+        <option value="q9">How does increased variability in order quantities correlate with increased variability in lead times?</option>
     </select>
     <button onclick="answerQuestion()">Get Answer</button>
 
@@ -95,8 +154,11 @@
             dataset.forEach(row => {
                 row.Lead_Time = parseFloat(row["Lead_Time"]) || 0;
                 row.Delivery_Delay = parseFloat(row["Delivery_Delay"]) || 0;
+                row.Order_Quantity = parseFloat(row["Order_Quantity"]) || 0;
+                row.Customer_Demand = parseFloat(row["Customer_Demand"]) || 0;
             });
 
+            // Question 1: Which supplier has the highest average lead time?
             if (question === "q1") {
                 const suppliers = {};
                 dataset.forEach(row => {
@@ -115,6 +177,7 @@
                 values = Object.values(suppliers);
             }
 
+            // Question 2: What transportation mode has the lowest average lead time?
             if (question === "q2") {
                 const transportModes = {};
                 dataset.forEach(row => {
@@ -133,6 +196,7 @@
                 values = Object.values(transportModes);
             }
 
+            // Question 3: Which month shows the highest average delays in delivery?
             if (question === "q3") {
                 const months = {};
                 dataset.forEach(row => {
@@ -152,6 +216,7 @@
                 values = Object.values(months);
             }
 
+            // Question 4: What type of disruption leads to the longest average delay?
             if (question === "q4") {
                 const disruptions = {};
                 dataset.forEach(row => {
@@ -170,6 +235,7 @@
                 values = Object.values(disruptions);
             }
 
+            // Question 5: Which product category experiences the shortest average lead time?
             if (question === "q5") {
                 const categories = {};
                 dataset.forEach(row => {
@@ -188,6 +254,77 @@
                 values = Object.values(categories);
             }
 
+            // Question 6: Which mode of transportation contributes most significantly to delays?
+            if (question === "q6") {
+                const transportModes = {};
+                dataset.forEach(row => {
+                    if (!row.Transportation_Mode) return;
+                    if (!transportModes[row.Transportation_Mode]) transportModes[row.Transportation_Mode] = [];
+                    transportModes[row.Transportation_Mode].push(row.Delivery_Delay);
+                });
+
+                for (const mode in transportModes) {
+                    transportModes[mode] = transportModes[mode].reduce((a, b) => a + b, 0) / transportModes[mode].length;
+                }
+
+                const worstMode = Object.keys(transportModes).reduce((a, b) => transportModes[a] > transportModes[b] ? a : b, "");
+                answer = `The transportation mode contributing most to delays is ${worstMode}.`;
+                labels = Object.keys(transportModes);
+                values = Object.values(transportModes);
+            }
+
+            // Question 7: Are there seasonal patterns affecting lead times?
+            if (question === "q7") {
+                const months = {};
+                dataset.forEach(row => {
+                    if (!row.Order_Date) return;
+                    const month = new Date(row.Order_Date).getMonth() + 1;
+                    if (!months[month]) months[month] = [];
+                    months[month].push(row.Lead_Time);
+                });
+
+                for (const month in months) {
+                    months[month] = months[month].reduce((a, b) => a + b, 0) / months[month].length;
+                }
+
+                answer = "Seasonal patterns might exist if there are significant variations across months in lead times.";
+                labels = Object.keys(months);
+                values = Object.values(months);
+            }
+
+            // Question 8: Compare monthly customer demand vs. order quantities (Bullwhip Effect)
+            if (question === "q8") {
+                const demandVsOrders = {};
+                dataset.forEach(row => {
+                    if (!row.Order_Date) return;
+                    const month = new Date(row.Order_Date).getMonth() + 1;
+                    if (!demandVsOrders[month]) demandVsOrders[month] = { demand: 0, orders: 0 };
+                    demandVsOrders[month].demand += row.Customer_Demand;
+                    demandVsOrders[month].orders += row.Order_Quantity;
+                });
+
+                labels = Object.keys(demandVsOrders);
+                values = labels.map(month => {
+                    return demandVsOrders[month].orders / demandVsOrders[month].demand;
+                });
+
+                answer = "Bullwhip Effect could be observed if there's significant amplification of order quantities relative to demand.";
+            }
+
+            // Question 9: How does increased variability in order quantities correlate with increased variability in lead times?
+            if (question === "q9") {
+                const orderQuantities = dataset.map(row => row.Order_Quantity);
+                const leadTimes = dataset.map(row => row.Lead_Time);
+
+                const orderQuantityVariance = calculateVariance(orderQuantities);
+                const leadTimeVariance = calculateVariance(leadTimes);
+
+                answer = `The correlation between order quantity variability and lead time variability is ${orderQuantityVariance > leadTimeVariance ? "positive" : "negative"}.`;
+
+                labels = ['Order Quantity Variability', 'Lead Time Variability'];
+                values = [orderQuantityVariance, leadTimeVariance];
+            }
+
             document.getElementById("answerText").textContent = answer;
             renderChart(labels, values);
         }
@@ -197,9 +334,15 @@
             const ctx = document.getElementById("chart").getContext("2d");
             chartInstance = new Chart(ctx, {
                 type: "bar",
-                data: { labels, datasets: [{ label: "Average Days", data: values, backgroundColor: "blue" }] },
+                data: { labels, datasets: [{ label: "Values", data: values, backgroundColor: "#98ff98" }] },
                 options: { responsive: true }
             });
+        }
+
+        function calculateVariance(data) {
+            const mean = data.reduce((a, b) => a + b, 0) / data.length;
+            const squaredDifferences = data.map(value => Math.pow(value - mean, 2));
+            return squaredDifferences.reduce((a, b) => a + b, 0) / data.length;
         }
     </script>
 </body>
