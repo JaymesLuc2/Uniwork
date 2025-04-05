@@ -9,8 +9,8 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #0d1b2a; /* Dark Blue */
-            color: #ffffff; /* White */
+            background-color: #0d1b2a;
+            color: #ffffff;
         }
         header {
             background-color: #0d1b2a;
@@ -119,14 +119,12 @@
             </ul>
         </div>
 
-        <!-- Secondary Page (Assignment Page) -->
         <div class="secondary-page" id="secondaryPage">
             <h1 id="assignmentTitle"></h1>
             <div class="file-list" id="fileList"></div>
             <a href="#" onclick="closeSecondaryPage()" style="color: #ffcf00;">Back</a>
         </div>
 
-        <!-- Third Page (Password Page) -->
         <div class="third-page" id="thirdPage">
             <h1>Password</h1>
             <input type="password" id="passwordInput" placeholder="Enter password">
@@ -143,7 +141,6 @@
     let fileToDeleteUrl = '';
     let fileToDeleteAssignmentNumber = '';
 
-    // Preload assignment files
     document.addEventListener('DOMContentLoaded', () => {
         const preloadedFiles = [
             {
@@ -157,6 +154,10 @@
             {
                 url: 'https://jaymesluc2.github.io/Uniwork/Logistics%20web%20based%20analysis1.html',
                 name: 'Logistics web based analysis1.html'
+            },
+            {
+                url: 'https://jaymesluc2.github.io/Uniwork/2165621%20Logistics%20Report.docx',
+                name: '2165621 Logistics Report.docx'
             }
         ];
         localStorage.setItem('assignment-1-files', JSON.stringify(preloadedFiles));
@@ -270,7 +271,7 @@
     function downloadFile(url) {
         const link = document.createElement('a');
         link.href = url;
-        link.download = url.split('/').pop(); // Use the filename from the URL
+        link.download = url.split('/').pop();
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -278,3 +279,4 @@
     </script>
 </body>
 </html>
+
