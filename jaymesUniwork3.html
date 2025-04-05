@@ -81,6 +81,15 @@
             padding: 5px 10px;
             border-radius: 5px;
         }
+        .download-button {
+            background-color: #00ff00;
+            border: none;
+            color: #0d1b2a;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -150,6 +159,10 @@
                 name: '216521 Logistics report.docx'
             },
             {
+                url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/2165621%20Logistics%20report.docx',
+                name: '2165621 Logistics report.docx'
+            },
+            {
                 url: 'https://jaymesluc2.github.io/Uniwork/Logistics%20web%20based%20analysis1.html',
                 name: 'Logistics web based analysis1.html'
             }
@@ -184,6 +197,7 @@
             fileItem.innerHTML = `
                 <a href="${file.url}" target="_blank">${file.name}</a>
                 <button class="delete-button" onclick="confirmDelete(${assignmentNumber}, '${file.url}')">Delete</button>
+                <button class="download-button" onclick="downloadFile('${file.url}')">Download</button>
             `;
             fileList.appendChild(fileItem);
 
@@ -259,6 +273,15 @@
         localStorage.setItem(`assignment-${assignmentNumber}-files`, JSON.stringify(files));
         alert('File deleted successfully.');
         openSecondaryPage(assignmentNumber);
+    }
+
+    function downloadFile(url) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = url.split('/').pop(); // Use the filename from the URL
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
     </script>
 </body>
