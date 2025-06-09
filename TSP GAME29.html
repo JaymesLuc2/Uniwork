@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stellar Logistics</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background-color: #000;
+            color: #fff;
+        }
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 300px;
+        }
+        #minimap {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 600px;
+            height: 600px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+            z-index: 10;
+            border: 1px solid #3498db;
+            overflow: hidden;
+        }
+        
+        #minimapTitle {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 11;
+            text-shadow: 1px 1px 2px black;
+        }
+        
+        #minimapInfo {
+            position: absolute;
+            top: 620px;
+            right: 10px;
+            color: white;
+            font-size: 14px;
+            z-index: 11;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 8px;
+            border-radius: 5px;
+            width: 584px;
+            text-align: center;
+            border: 1px solid #3498db;
+        }
+        #fuelDisplay {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: white;
+        }
+        button {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            border: none;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #34495e;
+        }
+        button:disabled {
+            background-color: #7f8c8d;
+            cursor: not-allowed;
+        }
+        #pathOptions {
+            margin-top: 10px;
+        }
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            z-index: 20;
+            max-width: 500px;
+        }
+        h2 {
+            color: #3498db;
+        }
+        #gameOver button {
+            background-color: #2980b9;
+            font-size: 16px;
+            padding: 10px 20px;
+        }
+        /* Reset buttons */
+        #resetButtons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        #undoLastMove {
+            background-color: #e67e22;
+        }
+        #restartGame {
+            background-color: #c0392b;
+        }
+        #instructionOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+        }
+        #instructionContent {
+            background-color: #1a1a1a;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+        }
+        #instructionContent h2 {
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        #instructionContent p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #ecf0f1;
+        }
+        #instructionContent button {
+            background-color: #3498db;
+            font-size: 18px;
+            padding: 12px 25px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="instructionOverlay">
+        <div id="instructionContent">
+            <h2>Welcome to Stellar Logistics!</h2>
+            <p>Your mission is to visit all planets and return to the Start Base.</p>
+            <p>Manage your fuel wisely! Each jump between planets consumes fuel, indicated on the minimap and route options.</p>
+            <p>Click on a planet on the minimap or use the "Available Routes" buttons to travel.</p>
+            <p>You can undo your last move or restart the mission at any time.</p>
+            <p>Aim for the optimal path to achieve the best efficiency rating!</p>
+            <button id="understoodButton">Understood, Let's Fly!</button>
+        </div>
+    </div>
+    <div id="gameContainer">
+        <div id="ui">
+            <h2>Stellar Logistics</h2>
+            <div id="fuelDisplay">Fuel Remaining: 1000</div>
+            <div id="currentPosition">Current: Start Base</div>
+            <div id="visitedPlanets">Planets Visited: 0/6</div>
+            <div id="pathOptions"></div>
+            <div id="resetButtons">
+                <button id="undoLastMove">Undo Last Move</button>
+                <button id="restartGame">Restart Game</button>
+            </div>
+        </div>
+        <div id="minimap">
+            <div id="minimapTitle">Navigation Map</div>
+        </div>
+        <div id="minimapInfo">Click on a planet to travel there. Lines show fuel costs between planets.</div>
+        <div id="gameOver">
+            <h2>Mission Complete!</h2>
+            <div id="results">
+                <p>Your fuel usage: <span id="playerFuel">0</span></p>
+                <p>Optimal fuel usage: <span id="optimalFuel">0</span></p>
+                <p>Efficiency rating: <span id="efficiency">0%</span></p>
+            </div>
+            <button id="restartButton">Start New Mission</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Game variables
+        const TOTAL_PLANETS = 6;
+        const START_FUEL = 1000;
+        let currentFuel = START_FUEL;
+        let currentPlanet = 'Solarium';
+        let visitedPlanets = new Set();
+        let usedPaths = new Set(); // Tracks used paths
+        let gameActive = true;
+        let planets = {};
+        let optimalPath = null;
+        let travelHistory = []; // Array to store the travel history for undo functionality
+        let shipTrails = []; // Array to store the ship's trail objects
+        let currentLevel = 1; // Track current level
+        let levelCompleted = false; // Track if current level is completed
+        
+        // Level-specific fuel costs
+        const levelDistances = {
+            1: {}, // Will be populated with original distances
+            2: {
+                'Solarium': {
+                    'Neonyx': 180,
+                    'Crimsonova': 150,
+                    'Emeraldian': 200,
+                    'Aurorion': 170,
+                    'Cobaltrix': 190
+                },
+                'Neonyx': {
+                    'Solarium': 180,
+                    'Crimsonova': 120,
+                    'Emeraldian': 140,
+                    'Aurorion': 160,
+                    'Cobaltrix': 130
+                },
+                'Crimsonova': {
+                    'Solarium': 150,
+                    'Neonyx': 120,
+                    'Emeraldian': 170,
+                    'Aurorion': 140,
+                    'Cobaltrix': 110
+                },
+                'Emeraldian': {
+                    'Solarium': 200,
+                    'Neonyx': 140,
+                    'Crimsonova': 170,
+                    'Aurorion': 150,
+                    'Cobaltrix': 160
+                },
+                'Aurorion': {
+                    'Solarium': 170,
+                    'Neonyx': 160,
+                    'Crimsonova': 140,
+                    'Emeraldian': 150,
+                    'Cobaltrix': 130
+                },
+                'Cobaltrix': {
+                    'Solarium': 190,
+                    'Neonyx': 130,
+                    'Crimsonova': 110,
+                    'Emeraldian': 160,
+                    'Aurorion': 130
+                }
+            }
+        };
+        
+        // Minimap variables
+        let minimapScene, minimapCamera, minimapRenderer;
+        let minimapShip;
+        let minimapTrails = []; // For trails in minimap
+        let minimapPlanets = {};
+        
+        // Planet data - Reorganized in hexagon pattern
+        const planetData = {
+            'Solarium': { color: 0xFFFF55, size: 50, position: { x: 0, y: 60, z: 173.2 } },
+            'Neonyx': { color: 0x00FFFF, size: 30, position: { x: -150, y: 30, z: -86.6 } },
+            'Crimsonova': { color: 0xFF5555, size: 40, position: { x: 150, y: -20, z: -86.6 } },
+            'Emeraldian': { color: 0x55FF55, size: 25, position: { x: -150, y: 50, z: 86.6 } },
+            'Aurorion': { color: 0xFF55FF, size: 35, position: { x: 150, y: -40, z: 86.6 } },
+            'Cobaltrix': { color: 0x5555FF, size: 45, position: { x: 0, y: -30, z: -173.2 } }
+        };
+
+        // Create distances between planets
+        function calculateDistances() {
+            const planetNames = Object.keys(planetData);
+            
+            for (let i = 0; i < planetNames.length; i++) {
+                levelDistances[1][planetNames[i]] = {};
+                
+                for (let j = 0; j < planetNames.length; j++) {
+                    if (i !== j) {
+                        const p1 = planetData[planetNames[i]].position;
+                        const p2 = planetData[planetNames[j]].position;
+                        
+                        // Calculate Euclidean distance
+                        const distance = Math.sqrt(
+                            Math.pow(p1.x - p2.x, 2) + 
+                            Math.pow(p1.y - p2.y, 2) + 
+                            Math.pow(p1.z - p2.z, 2)
+                        );
+                        
+                        // Fuel cost is distance divided by 2
+                        levelDistances[1][planetNames[i]][planetNames[j]] = Math.round(distance / 2);
+                    }
+                }
+            }
+        }
+        
+        // Function to find optimal path (using brute force for small problem)
+        function findOptimalPath() {
+            const planetNames = Object.keys(planetData).filter(name => name !== 'Solarium');
+            
+            // Generate all permutations of planets
+            function permute(arr, start = 0) {
+                if (start === arr.length - 1) {
+                    return [arr.slice()];
+                }
+                
+                let result = [];
+                for (let i = start; i < arr.length; i++) {
+                    [arr[start], arr[i]] = [arr[i], arr[start]];
+                    result = result.concat(permute(arr, start + 1));
+                    [arr[start], arr[i]] = [arr[i], arr[start]]; // backtrack
+                }
+                
+                return result;
+            }
+            
+            const permutations = permute(planetNames);
+            let minFuel = Infinity;
+            let bestPath = null;
+            
+            // Evaluate each permutation
+            for (const perm of permutations) {
+                let fuel = 0;
+                let currentLocation = 'Solarium';
+                
+                // Calculate fuel for this path
+                for (const planet of perm) {
+                    fuel += levelDistances[currentLevel][currentLocation][planet];
+                    currentLocation = planet;
+                }
+                
+                // Add return to Solarium
+                fuel += levelDistances[currentLevel][currentLocation]['Solarium'];
+                
+                // Update if this is better
+                if (fuel < minFuel) {
+                    minFuel = fuel;
+                    bestPath = ['Solarium', ...perm, 'Solarium'];
+                }
+            }
+            
+            return { path: bestPath, fuel: minFuel };
+        }
+
+        // Three.js setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        
+        // Define playerShip early
+        let playerShip;
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('gameContainer').appendChild(renderer.domElement);
+        
+        // Camera parameters for third-person view
+        const cameraOffset = new THREE.Vector3(-30, 15, 0); // Position behind and slightly above ship
+        let cameraTarget = new THREE.Vector3(); // What the camera looks at
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x333333);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 3, 5);
+        scene.add(directionalLight);
+
+        // Create stars
+        function createStars() {
+            const starsGeometry = new THREE.BufferGeometry();
+            const starsMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 1,
+                sizeAttenuation: false
+            });
+
+            const starsVertices = [];
+            for (let i = 0; i < 10000; i++) {
+                const x = (Math.random() - 0.5) * 2000;
+                const y = (Math.random() - 0.5) * 2000;
+                const z = (Math.random() - 0.5) * 2000;
+                starsVertices.push(x, y, z);
+            }
+
+            starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+            const stars = new THREE.Points(starsGeometry, starsMaterial);
+            scene.add(stars);
+            
+            // Create stars for minimap
+            const minimapStarsGeometry = new THREE.BufferGeometry();
+            const minimapStarsVertices = [];
+            for (let i = 0; i < 500; i++) {
+                const x = (Math.random() - 0.5) * 2000;
+                const y = (Math.random() - 0.5) * 2000;
+                const z = (Math.random() - 0.5) * 2000;
+                minimapStarsVertices.push(x, y, z);
+            }
+            minimapStarsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(minimapStarsVertices, 3));
+            const minimapStars = new THREE.Points(minimapStarsGeometry, starsMaterial);
+            minimapScene.add(minimapStars);
+        }
+
+        // Create space debris
+        function createDebris() {
+            for (let i = 0; i < 100; i++) {
+                const geometry = new THREE.TetrahedronGeometry(Math.random() * 3 + 1, 0);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x888888,
+                    roughness: 0.8,
+                    metalness: 0.2
+                });
+                const debris = new THREE.Mesh(geometry, material);
+                
+                // Position debris randomly in space
+                debris.position.set(
+                    (Math.random() - 0.5) * 1000,
+                    (Math.random() - 0.5) * 1000,
+                    (Math.random() - 0.5) * 1000
+                );
+                
+                // Random rotation
+                debris.rotation.set(
+                    Math.random() * Math.PI * 2,
+                    Math.random() * Math.PI * 2,
+                    Math.random() * Math.PI * 2
+                );
+                
+                scene.add(debris);
+            }
+        }
+
+        // Create pirate ships
+        function createPirateShips() {
+            for (let i = 0; i < 10; i++) {
+                // Ship body
+                const body = new THREE.Group();
+                
+                // Main hull - using CylinderGeometry instead of CapsuleGeometry
+                const hullGeometry = new THREE.CylinderGeometry(3, 3, 10, 12);
+                const hullMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x333333,
+                    roughness: 0.7,
+                    metalness: 0.3
+                });
+                const hull = new THREE.Mesh(hullGeometry, hullMaterial);
+                hull.rotation.z = Math.PI / 2;
+                body.add(hull);
+                
+                // Wings
+                const wingGeometry = new THREE.BoxGeometry(10, 1, 3);
+                const wingMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x444444,
+                    roughness: 0.6,
+                    metalness: 0.4
+                });
+                const wing = new THREE.Mesh(wingGeometry, wingMaterial);
+                wing.position.y = -1;
+                body.add(wing);
+                
+                // Cockpit
+                const cockpitGeometry = new THREE.SphereGeometry(2, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+                const cockpitMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x990000,
+                    roughness: 0.2,
+                    metalness: 0.8
+                });
+                const cockpit = new THREE.Mesh(cockpitGeometry, cockpitMaterial);
+                cockpit.position.set(3, 0, 0);
+                cockpit.rotation.z = Math.PI / 2;
+                body.add(cockpit);
+                
+                // Position ship randomly in space
+                body.position.set(
+                    (Math.random() - 0.5) * 800,
+                    (Math.random() - 0.5) * 800,
+                    (Math.random() - 0.5) * 800
+                );
+                
+                // Random rotation
+                body.rotation.set(
+                    Math.random() * Math.PI * 2,
+                    Math.random() * Math.PI * 2,
+                    Math.random() * Math.PI * 2
+                );
+                
+                scene.add(body);
+            }
+        }
+
+        // Create the Millennium Falcon-like ship
+        function createPlayerShip() {
+            const ship = new THREE.Group();
+            
+            // Main body - flattened disk
+            const bodyGeometry = new THREE.CylinderGeometry(10, 10, 3, 16);
+            const bodyMaterial = new THREE.MeshStandardMaterial({
+                color: 0xcccccc,
+                roughness: 0.7,
+                metalness: 0.5
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.rotation.x = Math.PI / 2;
+            ship.add(body);
+            
+            // Front mandibles
+            const mandibleGeometry = new THREE.BoxGeometry(15, 2, 4);
+            const mandibleMaterial = new THREE.MeshStandardMaterial({
+                color: 0xaaaaaa,
+                roughness: 0.6,
+                metalness: 0.4
+            });
+            
+            const leftMandible = new THREE.Mesh(mandibleGeometry, mandibleMaterial);
+            leftMandible.position.set(8, 0, -5);
+            leftMandible.rotation.y = Math.PI / 12;
+            ship.add(leftMandible);
+            
+            const rightMandible = new THREE.Mesh(mandibleGeometry, mandibleMaterial);
+            rightMandible.position.set(8, 0, 5);
+            rightMandible.rotation.y = -Math.PI / 12;
+            ship.add(rightMandible);
+            
+            // Cockpit
+            const cockpitGeometry = new THREE.SphereGeometry(3, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+            const cockpitMaterial = new THREE.MeshStandardMaterial({
+                color: 0x5555ff,
+                roughness: 0.2,
+                metalness: 0.8
+            });
+            const cockpit = new THREE.Mesh(cockpitGeometry, cockpitMaterial);
+            cockpit.position.set(0, 2, 5);
+            cockpit.rotation.x = -Math.PI / 2;
+            ship.add(cockpit);
+            
+            // Rear engine glow
+            const engineGlowGeometry = new THREE.RingGeometry(2, 4, 16);
+            const engineGlowMaterial = new THREE.MeshBasicMaterial({
+                color: 0x55aaff,
+                side: THREE.DoubleSide
+            });
+            const engineGlow = new THREE.Mesh(engineGlowGeometry, engineGlowMaterial);
+            engineGlow.position.set(-10, 0, 0);
+            engineGlow.rotation.y = Math.PI / 2;
+            ship.add(engineGlow);
+            
+            // Radar dish
+            const radarGeometry = new THREE.CylinderGeometry(2, 2, 0.5, 16);
+            const radarMaterial = new THREE.MeshStandardMaterial({
+                color: 0x888888,
+                roughness: 0.5,
+                metalness: 0.7
+            });
+            const radar = new THREE.Mesh(radarGeometry, radarMaterial);
+            radar.position.set(-5, 3, 0);
+            radar.rotation.x = Math.PI / 2;
+            ship.add(radar);
+            
+            // Add details - small boxes
+            for (let i = 0; i < 10; i++) {
+                const detailGeometry = new THREE.BoxGeometry(
+                    Math.random() * 2 + 1,
+                    Math.random() * 2 + 0.5,
+                    Math.random() * 2 + 0.5
+                );
+                const detailMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x999999,
+                    roughness: 0.7,
+                    metalness: 0.3
+                });
+                const detail = new THREE.Mesh(detailGeometry, detailMaterial);
+                
+                // Position details randomly on the ship body
+                const theta = Math.random() * Math.PI * 2;
+                const radius = Math.random() * 8;
+                detail.position.set(
+                    (Math.random() - 0.5) * 10,
+                    Math.sin(theta) * radius * 0.3 + 1,
+                    Math.cos(theta) * radius
+                );
+                
+                ship.add(detail);
+            }
+            
+            // Scale the ship down to a reasonable size
+            ship.scale.set(0.5, 0.5, 0.5);
+            
+            // Define the world-space "forward" direction for the ship
+            ship.userData.forward = new THREE.Vector3(1, 0, 0);
+            
+            return ship;
+        }
+        
+        // Create a simplified ship for the minimap
+        function createMinimapShip() {
+            const ship = new THREE.Group();
+            
+            // Simple ship representation - just a small cone
+            const geometry = new THREE.ConeGeometry(3, 6, 4);
+            const material = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+            const cone = new THREE.Mesh(geometry, material);
+            cone.rotation.x = Math.PI / 2;
+            ship.add(cone);
+            
+            // Scale the minimap ship
+            ship.scale.set(1, 1, 1);
+            
+            return ship;
+        }
+
+        // Create a planet
+        function createPlanet(name, data) {
+            const planetGroup = new THREE.Group();
+            
+            // Main planet geometry
+            const geometry = new THREE.SphereGeometry(data.size, 32, 32);
+            
+            // Create a texture with a gradient and some noise
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            // Convert hex color to RGB
+            const r = (data.color >> 16) & 255;
+            const g = (data.color >> 8) & 255;
+            const b = data.color & 255;
+            
+            // Create gradient
+            const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
+            gradient.addColorStop(0, `rgb(${r + 50}, ${g + 50}, ${b + 50})`);
+            gradient.addColorStop(0.7, `rgb(${r}, ${g}, ${b})`);
+            gradient.addColorStop(1, `rgb(${r - 50}, ${g - 50}, ${b - 50})`);
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Add some noise for texture
+            ctx.globalCompositeOperation = 'overlay';
+            for (let i = 0; i < 5000; i++) {
+                const x = Math.random() * 512;
+                const y = Math.random() * 512;
+                const size = Math.random() * 2 + 0.5;
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.2})`;
+                ctx.fillRect(x, y, size, size);
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            
+            // Planet material with glow effect
+            const material = new THREE.MeshStandardMaterial({
+                map: texture,
+                roughness: 0.7,
+                metalness: 0.3
+            });
+            
+            const planet = new THREE.Mesh(geometry, material);
+            planetGroup.add(planet);
+            
+            // Add glow effect
+            const glowGeometry = new THREE.SphereGeometry(data.size * 1.2, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: data.color,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.BackSide
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            planetGroup.add(glow);
+            
+            // If it's not Solarium, add some moons
+            if (name !== 'Solarium') {
+                const moonCount = Math.floor(Math.random() * 3) + 1;
+                
+                for (let i = 0; i < moonCount; i++) {
+                    const moonSize = data.size * (Math.random() * 0.15 + 0.05);
+                    const moonGeometry = new THREE.SphereGeometry(moonSize, 16, 16);
+                    const moonMaterial = new THREE.MeshStandardMaterial({
+                        color: 0xaaaaaa,
+                        roughness: 0.8,
+                        metalness: 0.2
+                    });
+                    const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+                    
+                    // Position moon in orbit
+                    const theta = Math.random() * Math.PI * 2;
+                    const orbitRadius = data.size * (Math.random() * 0.7 + 1.5);
+                    moon.position.set(
+                        Math.sin(theta) * orbitRadius,
+                        (Math.random() - 0.5) * orbitRadius * 0.5,
+                        Math.cos(theta) * orbitRadius
+                    );
+                    
+                    planetGroup.add(moon);
+                }
+            }
+            
+            // For Solarium, create a space station
+            if (name === 'Solarium') {
+                // Central hub
+                const hubGeometry = new THREE.SphereGeometry(5, 16, 16);
+                const hubMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xaaaaaa,
+                    roughness: 0.6,
+                    metalness: 0.7
+                });
+                const hub = new THREE.Mesh(hubGeometry, hubMaterial);
+                planetGroup.add(hub);
+                
+                // Spokes/arms extending out
+                for (let i = 0; i < 4; i++) {
+                    const armGeometry = new THREE.CylinderGeometry(1, 1, 20, 8);
+                    const armMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x888888,
+                        roughness: 0.7,
+                        metalness: 0.5
+                    });
+                    const arm = new THREE.Mesh(armGeometry, armMaterial);
+                    
+                    arm.position.set(0, 0, 0);
+                    arm.rotation.z = Math.PI / 2;
+                    arm.rotation.y = (Math.PI / 2) * i;
+                    
+                    planetGroup.add(arm);
+                    
+                    // Add modules to the ends of arms
+                    const moduleGeometry = new THREE.BoxGeometry(8, 4, 4);
+                    const moduleMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x666666,
+                        roughness: 0.6,
+                        metalness: 0.6
+                    });
+                    const module = new THREE.Mesh(moduleGeometry, moduleMaterial);
+                    
+                    // Position at the end of arm
+                    module.position.set(13, 0, 0);
+                    module.rotation.y = (Math.PI / 2) * i;
+                    
+                    planetGroup.add(module);
+                }
+                
+                // Landing pad
+                const padGeometry = new THREE.CylinderGeometry(8, 8, 1, 16);
+                const padMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x444444,
+                    roughness: 0.8,
+                    metalness: 0.3
+                });
+                const pad = new THREE.Mesh(padGeometry, padMaterial);
+                pad.position.set(0, -7, 0);
+                planetGroup.add(pad);
+                
+                // Lights around the landing pad
+                for (let i = 0; i < 8; i++) {
+                    const lightGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+                    const lightMaterial = new THREE.MeshBasicMaterial({
+                        color: 0xffaa00
+                    });
+                    const light = new THREE.Mesh(lightGeometry, lightMaterial);
+                    
+                    const theta = (Math.PI * 2 / 8) * i;
+                    light.position.set(
+                        Math.sin(theta) * 7.5,
+                        -6.5,
+                        Math.cos(theta) * 7.5
+                    );
+                    
+                    planetGroup.add(light);
+                }
+            }
+            
+            // Name label
+            const textCanvas = document.createElement('canvas');
+            textCanvas.width = 256;
+            textCanvas.height = 64;
+            const textCtx = textCanvas.getContext('2d');
+            textCtx.fillStyle = '#ffffff';
+            textCtx.font = '24px Arial';
+            textCtx.textAlign = 'center';
+            textCtx.fillText(name, 128, 40);
+            
+            const textTexture = new THREE.CanvasTexture(textCanvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ map: textTexture });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.position.set(0, data.size + 10, 0);
+            sprite.scale.set(20, 5, 1);
+            planetGroup.add(sprite);
+            
+            // Position the planet
+            planetGroup.position.set(data.position.x, data.position.y, data.position.z);
+            
+            // Add slight rotation
+            planetGroup.rotation.set(
+                Math.random() * 0.2,
+                Math.random() * 0.2,
+                Math.random() * 0.2
+            );
+            
+            scene.add(planetGroup);
+            
+            return {
+                object: planetGroup,
+                position: data.position,
+                size: data.size
+            };
+        }
+        
+        // Function to create all possible paths in the navigation map
+        function createAllPossiblePaths() {
+            // Clear any existing paths
+            for (const trail of minimapTrails) {
+                minimapScene.remove(trail);
+            }
+            minimapTrails = [];
+            
+            // Create paths between all planets
+            const planetNames = Object.keys(planetData);
+            for (let i = 0; i < planetNames.length; i++) {
+                for (let j = i + 1; j < planetNames.length; j++) {
+                    const fromPlanet = planetNames[i];
+                    const toPlanet = planetNames[j];
+                    
+                    // Create path line
+                    const startPos = planetData[fromPlanet].position;
+                    const endPos = planetData[toPlanet].position;
+                    
+                    const curve = new THREE.LineCurve3(
+                        new THREE.Vector3(startPos.x, startPos.y, startPos.z),
+                        new THREE.Vector3(endPos.x, endPos.y, endPos.z)
+                    );
+                    
+                    const points = curve.getPoints(50);
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    
+                    // Create white line for the path
+                    const lineMaterial = new THREE.LineBasicMaterial({ 
+                        color: 0xFFFFFF,
+                        linewidth: 3,
+                        opacity: 0.5,
+                        transparent: true
+                    });
+                    
+                    const line = new THREE.Line(geometry, lineMaterial);
+                    minimapScene.add(line);
+                    minimapTrails.push(line);
+                    
+                    // Calculate midpoint for the fuel cost label
+                    const midPoint = new THREE.Vector3().addVectors(
+                        new THREE.Vector3(startPos.x, startPos.y, startPos.z),
+                        new THREE.Vector3(endPos.x, endPos.y, endPos.z)
+                    ).multiplyScalar(0.5);
+                    
+                    // Create fuel cost label
+                    const fuelCost = levelDistances[currentLevel][fromPlanet][toPlanet];
+                    
+                    const labelCanvas = document.createElement('canvas');
+                    labelCanvas.width = 200;
+                    labelCanvas.height = 100;
+                    const labelCtx = labelCanvas.getContext('2d');
+                    
+                    // Background for better readability
+                    labelCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                    labelCtx.fillRect(0, 0, 200, 100);
+                    labelCtx.strokeStyle = '#ffffff';
+                    labelCtx.lineWidth = 4;
+                    labelCtx.strokeRect(0, 0, 200, 100);
+                    
+                    // Fuel cost text
+                    labelCtx.fillStyle = '#ffffff';
+                    labelCtx.font = 'bold 80px Arial';
+                    labelCtx.textAlign = 'center';
+                    labelCtx.textBaseline = 'middle';
+                    labelCtx.fillText(fuelCost.toString(), 100, 50);
+                    
+                    const labelTexture = new THREE.CanvasTexture(labelCanvas);
+                    const labelMaterial = new THREE.SpriteMaterial({ 
+                        map: labelTexture,
+                        transparent: true
+                    });
+                    const labelSprite = new THREE.Sprite(labelMaterial);
+                    labelSprite.position.copy(midPoint);
+                    labelSprite.position.y += 15;
+                    labelSprite.scale.set(30, 15, 1);
+                    minimapScene.add(labelSprite);
+                    minimapTrails.push(labelSprite);
+                }
+            }
+        }
+
+        // Update minimap planet labels to be larger and more readable
+        function createMinimapPlanet(name, data) {
+            const planetGroup = new THREE.Group();
+            
+            // Enhanced planet geometry with more detail
+            const geometry = new THREE.SphereGeometry(data.size / 2, 32, 32);
+            
+            // Create a more detailed material for the planet
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            // Convert hex color to RGB
+            const r = (data.color >> 16) & 255;
+            const g = (data.color >> 8) & 255;
+            const b = data.color & 255;
+            
+            // Create gradient
+            const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
+            gradient.addColorStop(0, `rgb(${r + 50}, ${g + 50}, ${b + 50})`);
+            gradient.addColorStop(0.7, `rgb(${r}, ${g}, ${b})`);
+            gradient.addColorStop(1, `rgb(${r - 50}, ${g - 50}, ${b - 50})`);
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Add some noise for texture
+            ctx.globalCompositeOperation = 'overlay';
+            for (let i = 0; i < 5000; i++) {
+                const x = Math.random() * 512;
+                const y = Math.random() * 512;
+                const size = Math.random() * 2 + 0.5;
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.2})`;
+                ctx.fillRect(x, y, size, size);
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            
+            // Enhanced planet material
+            const material = new THREE.MeshStandardMaterial({
+                map: texture,
+                roughness: 0.7,
+                metalness: 0.3,
+                emissive: data.color,
+                emissiveIntensity: 0.2
+            });
+            
+            const planet = new THREE.Mesh(geometry, material);
+            planetGroup.add(planet);
+            
+            // Add glow effect
+            const glowGeometry = new THREE.SphereGeometry(data.size / 2 * 1.2, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: data.color,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.BackSide
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            planetGroup.add(glow);
+            
+            // Create a much larger label for the planet name
+            const textCanvas = document.createElement('canvas');
+            textCanvas.width = 400;
+            textCanvas.height = 160;
+            const textCtx = textCanvas.getContext('2d');
+            
+            // Background for better readability
+            textCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            textCtx.fillRect(0, 0, 400, 160);
+            textCtx.strokeStyle = '#ffffff';
+            textCtx.lineWidth = 4;
+            textCtx.strokeRect(0, 0, 400, 160);
+            
+            // Planet name text - much larger
+            textCtx.fillStyle = '#ffffff';
+            textCtx.font = 'bold 80px Arial';
+            textCtx.textAlign = 'center';
+            textCtx.textBaseline = 'middle';
+            textCtx.fillText(name, 200, 80);
+            
+            const textTexture = new THREE.CanvasTexture(textCanvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ 
+                map: textTexture,
+                transparent: true
+            });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.position.set(0, data.size / 2 + 30, 0);
+            sprite.scale.set(50, 20, 1);
+            planetGroup.add(sprite);
+            
+            // Position the minimap planet
+            planetGroup.position.set(data.position.x, data.position.y, data.position.z);
+            
+            // Add to minimap scene
+            minimapScene.add(planetGroup);
+            
+            // Add click detection for minimap planets
+            planetGroup.userData = { name: name };
+            
+            return {
+                object: planetGroup,
+                position: data.position,
+                size: data.size / 2
+            };
+        }
+
+        // Function to update minimap planet information based on current position
+        function updateMinimapPlanetInfo() {
+            // Remove old labels first
+            for (const name in minimapPlanets) {
+                const planetGroup = minimapPlanets[name].object;
+                
+                // Find and remove old label sprites
+                for (let i = planetGroup.children.length - 1; i >= 0; i--) {
+                    if (planetGroup.children[i].type === 'Sprite') {
+                        planetGroup.remove(planetGroup.children[i]);
+                    }
+                }
+                
+                // Create new updated label
+                const textCanvas = document.createElement('canvas');
+                textCanvas.width = 400;
+                textCanvas.height = 160;
+                const textCtx = textCanvas.getContext('2d');
+                
+                // Background for better readability
+                textCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                textCtx.fillRect(0, 0, 400, 160);
+                textCtx.strokeStyle = '#ffffff';
+                textCtx.lineWidth = 4;
+                textCtx.strokeRect(0, 0, 400, 160);
+                
+                // Planet name - much larger
+                textCtx.fillStyle = visitedPlanets.has(name) ? '#55ff55' : '#ffffff';
+                if (name === currentPlanet) {
+                    textCtx.fillStyle = '#ffff00'; // Current planet in yellow
+                }
+                textCtx.font = 'bold 80px Arial';
+                textCtx.textAlign = 'center';
+                textCtx.textBaseline = 'middle';
+                textCtx.fillText(name, 200, 80);
+                
+                const textTexture = new THREE.CanvasTexture(textCanvas);
+                const spriteMaterial = new THREE.SpriteMaterial({ map: textTexture });
+                const sprite = new THREE.Sprite(spriteMaterial);
+                sprite.position.set(0, planetData[name].size / 2 + 30, 0);
+                sprite.scale.set(50, 20, 1);
+                planetGroup.add(sprite);
+            }
+        }
+
+        // Create all planets
+        function createPlanets() {
+            for (const [name, data] of Object.entries(planetData)) {
+                planets[name] = createPlanet(name, data);
+                minimapPlanets[name] = createMinimapPlanet(name, data);
+            }
+        }
+        
+        // Create a travel trail
+        function createTrail(startPos, endPos, fromPlanet, toPlanet, color = 0x3498db) {
+            // Create a curve between the two points
+            const curve = new THREE.LineCurve3(
+                new THREE.Vector3(startPos.x, startPos.y, startPos.z),
+                new THREE.Vector3(endPos.x, endPos.y, endPos.z)
+            );
+            
+            const points = curve.getPoints(50);
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            
+            const material = new THREE.LineBasicMaterial({ 
+                color: color,
+                linewidth: 3,
+                opacity: 0.7,
+                transparent: true
+            });
+            
+            const line = new THREE.Line(geometry, material);
+            scene.add(line);
+            shipTrails.push(line);
+            
+            // Create the same trail for minimap
+            const minimapMaterial = new THREE.LineBasicMaterial({ 
+                color: color,
+                linewidth: 5,
+                opacity: 0.9,
+                transparent: true
+            });
+            
+            const minimapLine = new THREE.Line(geometry, minimapMaterial);
+            minimapScene.add(minimapLine);
+            minimapTrails.push(minimapLine);
+            
+            // Calculate midpoint for the fuel cost label
+            const midPoint = new THREE.Vector3().addVectors(
+                new THREE.Vector3(startPos.x, startPos.y, startPos.z),
+                new THREE.Vector3(endPos.x, endPos.y, endPos.z)
+            ).multiplyScalar(0.5);
+            
+            // Add fuel cost label
+            const fuelCost = levelDistances[currentLevel][fromPlanet][toPlanet];
+            
+            // Create label for main scene
+            const mainLabelCanvas = document.createElement('canvas');
+            mainLabelCanvas.width = 64;
+            mainLabelCanvas.height = 32;
+            const mainLabelCtx = mainLabelCanvas.getContext('2d');
+            
+            // Background for better readability
+            mainLabelCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            mainLabelCtx.fillRect(0, 0, 64, 32);
+            mainLabelCtx.strokeStyle = '#ffffff';
+            mainLabelCtx.lineWidth = 2;
+            mainLabelCtx.strokeRect(0, 0, 64, 32);
+            
+            // Fuel cost text
+            mainLabelCtx.fillStyle = '#ffffff';
+            mainLabelCtx.font = 'bold 20px Arial';
+            mainLabelCtx.textAlign = 'center';
+            mainLabelCtx.textBaseline = 'middle';
+            mainLabelCtx.fillText(fuelCost.toString(), 32, 16);
+            
+            const mainLabelTexture = new THREE.CanvasTexture(mainLabelCanvas);
+            const mainLabelMaterial = new THREE.SpriteMaterial({ 
+                map: mainLabelTexture,
+                transparent: true
+            });
+            const mainLabelSprite = new THREE.Sprite(mainLabelMaterial);
+            mainLabelSprite.position.copy(midPoint);
+            mainLabelSprite.position.y += 10; // Position above the line
+            mainLabelSprite.scale.set(10, 5, 1);
+            scene.add(mainLabelSprite);
+            shipTrails.push(mainLabelSprite);
+            
+            // Create label for minimap
+            const minimapLabelCanvas = document.createElement('canvas');
+            minimapLabelCanvas.width = 48;
+            minimapLabelCanvas.height = 24;
+            const minimapLabelCtx = minimapLabelCanvas.getContext('2d');
+            
+            // Background for better readability
+            minimapLabelCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            minimapLabelCtx.fillRect(0, 0, 48, 24);
+            minimapLabelCtx.strokeStyle = '#ffffff';
+            minimapLabelCtx.lineWidth = 1;
+            minimapLabelCtx.strokeRect(0, 0, 48, 24);
+            
+            // Fuel cost text
+            minimapLabelCtx.fillStyle = '#ffffff';
+            minimapLabelCtx.font = 'bold 16px Arial';
+            minimapLabelCtx.textAlign = 'center';
+            minimapLabelCtx.textBaseline = 'middle';
+            minimapLabelCtx.fillText(fuelCost.toString(), 24, 12);
+            
+            const minimapLabelTexture = new THREE.CanvasTexture(minimapLabelCanvas);
+            const minimapLabelMaterial = new THREE.SpriteMaterial({ 
+                map: minimapLabelTexture,
+                transparent: true
+            });
+            const minimapLabelSprite = new THREE.Sprite(minimapLabelMaterial);
+            minimapLabelSprite.position.copy(midPoint);
+            minimapLabelSprite.position.y += 5; // Position above the line
+            minimapLabelSprite.scale.set(7.5, 3.75, 1);
+            minimapScene.add(minimapLabelSprite);
+            minimapTrails.push(minimapLabelSprite);
+            
+            return { 
+                mainLine: line, 
+                minimapLine: minimapLine, 
+                mainLabel: mainLabelSprite,
+                minimapLabel: minimapLabelSprite 
+            };
+        }
+        
+        // Initialize the game
+        function initializeGame() {
+            showInstructions();
+        }
+
+        // Function to show instructions
+        function showInstructions() {
+            document.getElementById('instructionOverlay').style.display = 'flex';
+            document.getElementById('gameContainer').style.display = 'none'; // Hide game initially
+        }
+
+        // Function to start the actual game
+        function startGame() {
+            document.getElementById('instructionOverlay').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+
+            // Set up the minimap first
+            setupMinimap();
+            
+            calculateDistances();
+            optimalPath = findOptimalPath();
+            createStars();
+            createDebris();
+            createPirateShips();
+            createPlanets();
+            
+            // Create all possible paths in the navigation map
+            createAllPossiblePaths();
+            
+            // Set up initial camera position (before updating with ship position)
+            camera.position.set(0, 50, 100);
+            camera.lookAt(0, 0, 0);
+            
+            // Create player ship
+            playerShip = createPlayerShip();
+            playerShip.position.copy(planets['Solarium'].position);
+            playerShip.position.y += 15; // Position above the start base
+            scene.add(playerShip);
+            
+            // Create minimap ship
+            minimapShip = createMinimapShip();
+            minimapShip.position.copy(planets['Solarium'].position);
+            minimapShip.position.y += 15;
+            minimapScene.add(minimapShip);
+            
+            // Now update camera to follow ship
+            updateCameraPosition();
+            
+            // Add animation for the ship
+            playerShip.userData = {
+                animating: false,
+                startPosition: new THREE.Vector3(),
+                targetPosition: new THREE.Vector3(),
+                animationProgress: 0,
+                animationDuration: 3 // seconds
+            };
+            
+            minimapShip.userData = {
+                animating: false,
+                startPosition: new THREE.Vector3(),
+                targetPosition: new THREE.Vector3(),
+                animationProgress: 0,
+                animationDuration: 3 // seconds
+            };
+            
+            // Update planet info on minimap
+            updateMinimapPlanetInfo();
+            
+            // Update UI
+            updatePathOptions();
+            
+            // Start animation loop
+            animate();
+        }
+        
+        // Initialize minimap
+        function setupMinimap() {
+            // Create minimap container
+            const minimapContainer = document.getElementById('minimap');
+            
+            // Setup minimap renderer
+            minimapScene = new THREE.Scene();
+            minimapCamera = new THREE.PerspectiveCamera(60, 1, 1, 2000);
+            minimapRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            minimapRenderer.setSize(600, 600);
+            minimapContainer.appendChild(minimapRenderer.domElement);
+            
+            // Position minimap camera to show the entire space
+            minimapCamera.position.set(0, 400, 0);
+            minimapCamera.lookAt(0, 0, 0);
+            
+            // Add minimap lighting
+            const minimapAmbientLight = new THREE.AmbientLight(0x666666);
+            minimapScene.add(minimapAmbientLight);
+            
+            // Add event listener for minimap clicks
+            minimapRenderer.domElement.addEventListener('click', onMinimapClick);
+        }
+        
+        // Handle minimap clicks
+        function onMinimapClick(event) {
+            if (!gameActive) return;
+            
+            // Calculate mouse position in normalized device coordinates (-1 to +1)
+            const rect = minimapRenderer.domElement.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2(x, y);
+            
+            // Update the picking ray with the camera and mouse position
+            raycaster.setFromCamera(mouse, minimapCamera);
+            
+            // Calculate objects intersecting the picking ray
+            const intersects = raycaster.intersectObjects(minimapScene.children, true);
+            
+            // Find the first clicked planet
+            for (let i = 0; i < intersects.length; i++) {
+                // Traverse up to find the group with userData
+                let object = intersects[i].object;
+                while (object && !object.userData.name) {
+                    object = object.parent;
+                }
+                
+                if (object && object.userData.name) {
+                    const planetName = object.userData.name;
+                    
+                    // Special handling for Solarium
+                    if (planetName === 'Solarium') {
+                        // Only allow clicking Solarium if all planets are visited
+                        if (visitedPlanets.size !== 5) {
+                            return; // Ignore click if not all planets visited
+                        }
+                    }
+                    
+                    // Check if this is a valid destination
+                    const destinations = Object.keys(planetData).filter(name => {
+                        // Can't go to current planet or already visited planets
+                        if (name === currentPlanet || (name !== 'Solarium' && visitedPlanets.has(name))) {
+                            return false;
+                        }
+                        
+                        // Can only return to Solarium after visiting all planets
+                        if (name === 'Solarium' && visitedPlanets.size < 5) {
+                            return false;
+                        }
+                        
+                        // Check if path has been used
+                        const pathKey = `${currentPlanet}-${name}`;
+                        if (usedPaths.has(pathKey)) {
+                            return false;
+                        }
+                        
+                        return true;
+                    });
+                    
+                    if (destinations.includes(planetName)) {
+                        const fuelCost = levelDistances[currentLevel][currentPlanet][planetName];
+                        if (fuelCost <= currentFuel) {
+                            travel(planetName);
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+        }
+
+        // Update path options in UI
+        function updatePathOptions() {
+            const pathOptionsDiv = document.getElementById('pathOptions');
+            pathOptionsDiv.innerHTML = '<h3>Available Routes:</h3>';
+            
+            // Get all possible destinations
+            const destinations = Object.keys(planetData).filter(name => {
+                // Can't go to current planet or already visited planets
+                if (name === currentPlanet || (name !== 'Solarium' && visitedPlanets.has(name))) {
+                    return false;
+                }
+                
+                // Check if path has been used
+                const pathKey = `${currentPlanet}-${name}`;
+                if (usedPaths.has(pathKey)) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Create buttons for each destination
+            for (const dest of destinations) {
+                const fuelCost = levelDistances[currentLevel][currentPlanet][dest];
+                const button = document.createElement('button');
+                button.textContent = `${dest} (Fuel: ${fuelCost})`;
+                
+                // Special handling for Solarium button
+                if (dest === 'Solarium') {
+                    button.disabled = visitedPlanets.size !== 5 || fuelCost > currentFuel;
+                    if (visitedPlanets.size !== 5) {
+                        button.title = 'Visit all other planets first!';
+                    } else if (fuelCost > currentFuel) {
+                        button.title = `Not enough fuel! Need ${fuelCost} fuel to return to Solarium.`;
+                    }
+                } else {
+                button.disabled = fuelCost > currentFuel;
+                }
+
+                // Set button color to match planet color
+                const planetColorHex = planetData[dest].color;
+                const cssColor = "#" + planetColorHex.toString(16).padStart(6, '0');
+                button.style.backgroundColor = cssColor;
+
+                // Adjust text color for better contrast
+                const r = (planetColorHex >> 16) & 0xFF;
+                const g = (planetColorHex >> 8) & 0xFF;
+                const b = planetColorHex & 0xFF;
+                if (r + g + b > 382) {
+                    button.style.color = "#000000";
+                } else {
+                    button.style.color = "#FFFFFF";
+                }
+                
+                button.addEventListener('click', () => {
+                    if (gameActive) {
+                        travel(dest);
+                    }
+                });
+                
+                pathOptionsDiv.appendChild(button);
+            }
+
+            // Add Return to Solarium button only if exactly 5 planets have been visited and we're not at Solarium
+            if (visitedPlanets.size === 5 && currentPlanet !== 'Solarium') {
+                // Check if return button already exists
+                const existingReturnButton = document.getElementById('returnToSolariumButton');
+                if (!existingReturnButton) {
+                    console.log('All 5 planets visited, showing return button');
+                    const returnButton = document.createElement('button');
+                    returnButton.id = 'returnToSolariumButton'; // Add ID to track the button
+                    returnButton.textContent = 'Return to Solarium to Complete Mission';
+                    returnButton.style.backgroundColor = '#FFFF55'; // Solarium's color
+                    returnButton.style.color = '#000000';
+                    returnButton.style.marginTop = '15px';
+                    returnButton.style.fontWeight = 'bold';
+                    returnButton.style.padding = '10px 20px';
+                    returnButton.style.border = '2px solid #FFD700';
+                    returnButton.style.boxShadow = '0 0 10px rgba(255, 255, 85, 0.5)';
+                    
+                    const fuelCost = levelDistances[currentLevel][currentPlanet]['Solarium'];
+                    returnButton.disabled = fuelCost > currentFuel;
+                    
+                    if (fuelCost > currentFuel) {
+                        returnButton.title = `Not enough fuel! Need ${fuelCost} fuel to return to Solarium.`;
+                    }
+                    
+                    returnButton.addEventListener('click', () => {
+                        if (gameActive) {
+                            travel('Solarium');
+                        }
+                    });
+                    
+                    pathOptionsDiv.appendChild(returnButton);
+                }
+            }
+        }
+
+        // Travel to a new planet
+        function travel(destination) {
+            // Save current state for undo
+            travelHistory.push({
+                fromPlanet: currentPlanet,
+                toPlanet: destination,
+                fuelBefore: currentFuel,
+                visitedBefore: new Set(visitedPlanets),
+                usedPathsBefore: new Set(usedPaths)
+            });
+            
+            // Mark path as used
+            const pathKey = `${currentPlanet}-${destination}`;
+            usedPaths.add(pathKey);
+            
+            // Draw trail with fuel information
+            const startPos = planets[currentPlanet].position;
+            const endPos = planets[destination].position;
+            createTrail(startPos, endPos, currentPlanet, destination);
+            
+            // Update fuel
+            const fuelCost = levelDistances[currentLevel][currentPlanet][destination];
+            currentFuel -= fuelCost;
+            document.getElementById('fuelDisplay').textContent = `Fuel Remaining: ${currentFuel}`;
+            
+            // If not Solarium, add to visited planets
+            if (destination !== 'Solarium') {
+                visitedPlanets.add(destination);
+                document.getElementById('visitedPlanets').textContent = `Planets Visited: ${visitedPlanets.size}/${TOTAL_PLANETS}`;
+            }
+            
+            // Update current position
+            currentPlanet = destination;
+            document.getElementById('currentPosition').textContent = `Current: ${currentPlanet}`;
+            
+            // Check if game is complete (only when returning to Solarium after visiting all planets)
+            if (destination === 'Solarium' && visitedPlanets.size === 5) {
+                endGame(true);
+                return;
+            }
+            
+            // Animate ship movement
+            animateShipMovement(planets[destination].position);
+            
+            // Update path options
+            updatePathOptions();
+            
+            // Update minimap planet info to show costs from current position
+            updateMinimapPlanetInfo();
+        }
+        
+        // Undo last move
+        function undoLastMove() {
+            if (travelHistory.length === 0 || !gameActive) return;
+            
+            const lastMove = travelHistory.pop();
+            
+            // Restore state
+            currentPlanet = lastMove.fromPlanet;
+            currentFuel = lastMove.fuelBefore;
+            visitedPlanets = new Set(lastMove.visitedBefore);
+            usedPaths = new Set(lastMove.usedPathsBefore);
+            
+            // Remove the last trails (line and label)
+            if (shipTrails.length > 0) {
+                // Remove main trail
+                const lastTrail = shipTrails.pop();
+                scene.remove(lastTrail);
+                
+                // Remove from minimap (line and label)
+                const trailsToRemove = minimapTrails.splice(-2);
+                trailsToRemove.forEach(obj => minimapScene.remove(obj));
+            }
+            
+            // Update UI
+            document.getElementById('fuelDisplay').textContent = `Fuel Remaining: ${currentFuel}`;
+            document.getElementById('currentPosition').textContent = `Current: ${currentPlanet}`;
+            document.getElementById('visitedPlanets').textContent = `Planets Visited: ${visitedPlanets.size}/${TOTAL_PLANETS}`;
+            
+            // Move ship back
+            animateShipMovement(planets[currentPlanet].position);
+            
+            // Update path options
+            updatePathOptions();
+            
+            // Update minimap planet info
+            updateMinimapPlanetInfo();
+        }
+
+        // Animate ship movement
+        function animateShipMovement(targetPosition) {
+            const shipData = playerShip.userData;
+            shipData.animating = true;
+            shipData.startPosition.copy(playerShip.position);
+            
+            // Set target position slightly above the planet
+            shipData.targetPosition.copy(targetPosition);
+            shipData.targetPosition.y += planets[currentPlanet].size + 10;
+            
+            shipData.animationProgress = 0;
+            
+            // Also animate minimap ship
+            const minimapShipData = minimapShip.userData;
+            minimapShipData.animating = true;
+            minimapShipData.startPosition.copy(minimapShip.position);
+            minimapShipData.targetPosition.copy(targetPosition);
+            minimapShipData.targetPosition.y += minimapPlanets[currentPlanet].size + 5;
+            minimapShipData.animationProgress = 0;
+        }
+
+        // End the game
+        function endGame(success) {
+            gameActive = false;
+            
+            const gameOverDiv = document.getElementById('gameOver');
+            const resultsDiv = document.getElementById('results');
+            
+            // Clear previous results
+            resultsDiv.innerHTML = '';
+            
+            gameOverDiv.style.display = 'block';
+            
+            if (success) {
+                const fuelUsed = START_FUEL - currentFuel;
+                const optimalFuel = optimalPath.fuel;
+                const efficiency = Math.round((optimalFuel / fuelUsed) * 100);
+                
+                // Check if level is completed with 100% efficiency
+                levelCompleted = efficiency === 100;
+                
+                let title = 'Mission Complete!';
+                if (levelCompleted && currentLevel === 1) {
+                    title = 'Level 1 Complete! Proceed to Level 2!';
+                } else if (levelCompleted && currentLevel === 2) {
+                    title = 'Congratulations! You\'ve Completed All Levels!';
+                }
+                
+                document.querySelector('#gameOver h2').textContent = title;
+                
+                // Create a more detailed results display
+                const resultsHTML = `
+                    <div style="background-color: rgba(0, 0, 0, 0.7); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #3498db; margin-top: 0;">Mission Results</h3>
+                        
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <div style="flex: 1; text-align: center; padding: 10px; background-color: rgba(52, 152, 219, 0.2); border-radius: 5px; margin-right: 10px;">
+                                <h4 style="margin: 0 0 10px 0; color: #3498db;">Your Path</h4>
+                                <p style="margin: 5px 0;">Fuel Used: <span style="color: #2ecc71;">${fuelUsed}</span></p>
+                                <p style="margin: 5px 0;">Path: ${Array.from(visitedPlanets).join(' → ')} → Solarium</p>
+                            </div>
+                            
+                            <div style="flex: 1; text-align: center; padding: 10px; background-color: rgba(46, 204, 113, 0.2); border-radius: 5px; margin-left: 10px;">
+                                <h4 style="margin: 0 0 10px 0; color: #2ecc71;">Optimal Path</h4>
+                                <p style="margin: 5px 0;">Fuel Used: <span style="color: #2ecc71;">${optimalFuel}</span></p>
+                                <p style="margin: 5px 0;">Path: ${optimalPath.path.join(' → ')}</p>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; padding: 15px; background-color: rgba(52, 152, 219, 0.1); border-radius: 5px;">
+                            <h4 style="margin: 0 0 10px 0; color: #3498db;">Efficiency Rating</h4>
+                            <p style="font-size: 24px; margin: 0; color: ${efficiency === 100 ? '#2ecc71' : '#e74c3c'}">
+                                ${efficiency}%
+                            </p>
+                            <p style="margin: 5px 0; font-size: 14px; color: #95a5a6;">
+                                ${efficiency === 100 ? 'Perfect! You found the optimal path!' : 'Good effort! Try to find a better path!'}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                
+                resultsDiv.innerHTML = resultsHTML;
+                
+                // Update the restart button based on level completion
+                const restartButton = document.getElementById('restartButton');
+                if (levelCompleted && currentLevel === 1) {
+                    restartButton.textContent = 'Proceed to Level 2';
+                    restartButton.style.backgroundColor = '#f1c40f';
+                } else if (levelCompleted && currentLevel === 2) {
+                    restartButton.textContent = 'Play Again';
+                    restartButton.style.backgroundColor = '#2ecc71';
+                } else {
+                    restartButton.textContent = 'Try Again';
+                    restartButton.style.backgroundColor = '#e74c3c';
+                }
+                
+                restartButton.style.fontSize = '18px';
+                restartButton.style.padding = '12px 25px';
+                restartButton.style.marginTop = '20px';
+                restartButton.style.border = 'none';
+                restartButton.style.borderRadius = '5px';
+                restartButton.style.cursor = 'pointer';
+                restartButton.style.transition = 'background-color 0.3s';
+                
+                restartButton.onmouseover = function() {
+                    this.style.backgroundColor = this.style.backgroundColor === '#f1c40f' ? '#f39c12' : 
+                                              this.style.backgroundColor === '#2ecc71' ? '#27ae60' : '#c0392b';
+                };
+                
+                restartButton.onmouseout = function() {
+                    this.style.backgroundColor = this.style.backgroundColor === '#f39c12' ? '#f1c40f' : 
+                                              this.style.backgroundColor === '#27ae60' ? '#2ecc71' : '#e74c3c';
+                };
+            } else {
+                document.querySelector('#gameOver h2').textContent = 'Mission Failed!';
+                
+                let failureReason;
+                if (currentFuel <= 0) {
+                    failureReason = 'You ran out of fuel!';
+                } else {
+                    failureReason = 'No valid paths remaining to complete the mission!';
+                }
+                
+                const reasonElement = document.createElement('p');
+                reasonElement.textContent = failureReason;
+                resultsDiv.appendChild(reasonElement);
+            }
+        }
+
+        // Reset game
+        function resetGame() {
+            // Clear all trails
+            for (const trail of shipTrails) {
+                scene.remove(trail);
+            }
+            shipTrails = [];
+            
+            for (const trail of minimapTrails) {
+                minimapScene.remove(trail);
+            }
+            minimapTrails = [];
+            
+            // Reset game variables
+            currentFuel = START_FUEL;
+            currentPlanet = 'Solarium';
+            visitedPlanets = new Set();
+            usedPaths = new Set();
+            gameActive = true;
+            travelHistory = [];
+            
+            // If level was completed with 100% efficiency, advance to next level
+            if (levelCompleted) {
+                if (currentLevel === 1) {
+                    currentLevel = 2;
+                    // Recalculate optimal path for new level
+                    optimalPath = findOptimalPath();
+                } else {
+                    currentLevel = 1;
+                    // Reset to level 1 distances
+                    optimalPath = findOptimalPath();
+                }
+            }
+            
+            // Reset UI
+            document.getElementById('fuelDisplay').textContent = `Fuel Remaining: ${currentFuel}`;
+            document.getElementById('currentPosition').textContent = `Current: ${currentPlanet}`;
+            document.getElementById('visitedPlanets').textContent = `Planets Visited: 0/${TOTAL_PLANETS}`;
+            document.getElementById('gameOver').style.display = 'none';
+            
+            // Reset ship position
+            playerShip.position.copy(planets['Solarium'].position);
+            playerShip.position.y += 15;
+            
+            // Reset minimap ship position
+            minimapShip.position.copy(planets['Solarium'].position);
+            minimapShip.position.y += 15;
+            
+            // Reset ship rotation
+            playerShip.rotation.set(0, 0, 0);
+            minimapShip.rotation.set(0, 0, 0);
+            
+            // Recreate all possible paths with updated fuel costs
+            createAllPossiblePaths();
+            
+            // Update minimap planet info
+            updateMinimapPlanetInfo();
+            
+            // Update path options
+            updatePathOptions();
+        }
+
+        // Update camera position to follow the ship
+        function updateCameraPosition() {
+            if (!playerShip) return; // Guard clause if playerShip is not yet defined
+            
+            // Create a rotated offset based on ship's orientation
+            const rotatedOffset = cameraOffset.clone();
+            rotatedOffset.applyQuaternion(playerShip.quaternion);
+            
+            // Position camera relative to ship
+            camera.position.copy(playerShip.position).add(rotatedOffset);
+            
+            // Calculate target position (slightly ahead of ship)
+            cameraTarget.copy(playerShip.position);
+            const forward = new THREE.Vector3(1, 0, 0).applyQuaternion(playerShip.quaternion);
+            cameraTarget.add(forward.multiplyScalar(20));
+            
+            // Look at the target
+            camera.lookAt(cameraTarget);
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Update ship animation if in progress
+            if (playerShip.userData.animating) {
+                const shipData = playerShip.userData;
+                shipData.animationProgress += 0.01;
+                
+                if (shipData.animationProgress >= 1) {
+                    // Animation complete
+                    shipData.animating = false;
+                    playerShip.position.copy(shipData.targetPosition);
+                } else {
+                    // Interpolate position
+                    playerShip.position.lerpVectors(
+                        shipData.startPosition,
+                        shipData.targetPosition,
+                        shipData.animationProgress
+                    );
+                    
+                    // Calculate direction for ship to face
+                    const direction = new THREE.Vector3().subVectors(
+                        shipData.targetPosition,
+                        shipData.startPosition
+                    ).normalize();
+                    
+                    // Orient ship to face direction of travel
+                    const targetQuaternion = new THREE.Quaternion().setFromUnitVectors(
+                        new THREE.Vector3(1, 0, 0), // Ship's forward direction is along x-axis
+                        direction
+                    );
+                    
+                    playerShip.quaternion.slerp(targetQuaternion, 0.1);
+                }
+                
+                // Update camera to follow ship in third-person view
+                updateCameraPosition();
+            }
+            
+            // Update minimap ship animation
+            if (minimapShip.userData.animating) {
+                const shipData = minimapShip.userData;
+                shipData.animationProgress += 0.01;
+                
+                if (shipData.animationProgress >= 1) {
+                    // Animation complete
+                    shipData.animating = false;
+                    minimapShip.position.copy(shipData.targetPosition);
+                } else {
+                    // Interpolate position
+                    minimapShip.position.lerpVectors(
+                        shipData.startPosition,
+                        shipData.targetPosition,
+                        shipData.animationProgress
+                    );
+                    
+                    // Calculate direction for ship to face
+                    const direction = new THREE.Vector3().subVectors(
+                        shipData.targetPosition,
+                        shipData.startPosition
+                    ).normalize();
+                    
+                    // Orient ship to face direction of travel
+                    const targetQuaternion = new THREE.Quaternion().setFromUnitVectors(
+                        new THREE.Vector3(1, 0, 0), // Ship's forward direction is along x-axis
+                        direction
+                    );
+                    
+                    minimapShip.quaternion.slerp(targetQuaternion, 0.1);
+                }
+            }
+            
+            // Rotate planets gently
+            for (const planetName in planets) {
+                const planetObj = planets[planetName].object;
+                planetObj.rotation.y += 0.001;
+            }
+            
+            // Handle window resizing
+            if (renderer.domElement.width !== window.innerWidth || 
+                renderer.domElement.height !== window.innerHeight) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            
+            // Render main scene
+            renderer.render(scene, camera);
+            
+            // Render minimap
+            minimapRenderer.render(minimapScene, minimapCamera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Add event listeners for buttons
+        document.getElementById('restartButton').addEventListener('click', resetGame);
+        document.getElementById('undoLastMove').addEventListener('click', undoLastMove);
+        document.getElementById('restartGame').addEventListener('click', resetGame);
+        document.getElementById('understoodButton').addEventListener('click', startGame);
+
+        // Initialize the game
+        initializeGame();
+    </script>
+</body>
+</html>
