@@ -217,9 +217,17 @@
             staticAssignment1Files.forEach(file => {
                 const fileItem = document.createElement('div');
                 fileItem.className = 'file-item';
+                // Determine file extension for button logic
+                const ext = file.name.split('.').pop().toLowerCase();
+                let openBtn = '';
+                if (['pdf','html'].includes(ext)) {
+                    openBtn = `<button class="download-button" onclick="window.open('${file.url}', '_blank')">Open</button>`;
+                }
+                // Only show Download for ZIPs, but allow download for all
                 fileItem.innerHTML = `
                     <a href="${file.url}" target="_blank">${file.name}</a>
-                    <button class="download-button" onclick="downloadFile('${file.url}')">Download</button>
+                    ${openBtn}
+                    <button class="download-button" onclick="downloadFile('${file.url}', '${file.name}')">Download</button>
                 `;
                 fileList.appendChild(fileItem);
             });
@@ -233,7 +241,7 @@
             fileItem.innerHTML = `
                 <a href="${file.url}" target="_blank">${file.name}</a>
                 <button class="delete-button" onclick="confirmDelete(${assignmentNumber}, '${file.url}')">Delete</button>
-                <button class="download-button" onclick="downloadFile('${file.url}')">Download</button>
+                <button class="download-button" onclick="downloadFile('${file.url}', '${file.name}')">Download</button>
             `;
             fileList.appendChild(fileItem);
 
@@ -311,10 +319,10 @@
         openSecondaryPage(assignmentNumber);
     }
 
-    function downloadFile(url) {
+    function downloadFile(url, name) {
         const link = document.createElement('a');
         link.href = url;
-        link.download = url.split('/').pop();
+        link.download = name || url.split('/').pop();
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -322,4 +330,3 @@
     </script>
 </body>
 </html>
-
