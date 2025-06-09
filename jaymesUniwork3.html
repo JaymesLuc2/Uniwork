@@ -1,290 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jaymes Cardoso Ake - Assignments</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #0d1b2a;
-            color: #ffffff;
-        }
-        header {
-            background-color: #0d1b2a;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            width: 100%;
-        }
-        header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #ffffff;
-        }
-        .container {
-            display: flex;
-            padding: 20px;
-        }
-        .buttons {
-            flex: 1;
-            padding: 20px;
-            margin-right: 20px;
-        }
-        .buttons button {
-            background-color: #ffcf00;
-            border: none;
-            color: #0d1b2a;
-            cursor: pointer;
-            padding: 10px;
-            width: 100%;
-            border-radius: 5px;
-        }
-        .secondary-page, .third-page {
-            display: none;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-        .secondary-page {
-            background-color: #4b0082;
-        }
-        .third-page {
-            background-color: #808080;
-        }
-        .show {
-            display: flex;
-        }
-        .file-list {
-            margin-top: 20px;
-        }
-        .file-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-        }
-        .file-item a {
-            color: #ffffff;
-            text-decoration: none;
-        }
-        .delete-button {
-            background-color: #ff0000;
-            border: none;
-            color: #ffffff;
-            cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-        .download-button {
-            background-color: #00ff00;
-            border: none;
-            color: #0d1b2a;
-            cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 5px;
-            margin-left: 10px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jaymes Cardoso Ake - Assignments</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #0d1b2a;
+      color: #ffffff;
+    }
+    header {
+      background-color: #0d1b2a;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #ffffff;
+    }
+    .container {
+      display: flex;
+      padding: 20px;
+    }
+    .buttons {
+      flex: 1;
+      padding: 20px;
+      margin-right: 20px;
+    }
+    .buttons button {
+      background-color: #ffcf00;
+      border: none;
+      color: #0d1b2a;
+      cursor: pointer;
+      padding: 10px;
+      width: 100%;
+      border-radius: 5px;
+    }
+    .assignment-page {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      background-color: #4b0082;
+      padding: 40px 20px 20px 20px;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
+    }
+    .assignment-page.show {
+      display: flex;
+    }
+    .file-list {
+      margin-top: 20px;
+    }
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .file-item a {
+      color: #ffffff;
+      text-decoration: none;
+    }
+    .delete-button {
+      background-color: #ff0000;
+      border: none;
+      color: #ffffff;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+    .download-button {
+      background-color: #00ff00;
+      border: none;
+      color: #0d1b2a;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 5px;
+      margin-left: 10px;
+    }
+    .third-page {
+      display: none;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background-color: #808080;
+      top: 0;
+      left: 0;
+      z-index: 100;
+    }
+    .third-page.show {
+      display: flex;
+    }
+    @media (max-width: 600px) {
+      .container, .assignment-page {
+        padding: 10px;
+      }
+      .buttons {
+        padding: 10px;
+        margin-right: 0;
+      }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Jaymes Cardoso-Ake</h1>
-    </header>
-    <div class="container">
-        <div class="buttons">
-            <div class="upload-section">
-                <form id="uploadForm" enctype="multipart/form-data">
-                    <input type="file" id="fileInput" name="file" required>
-                    <select id="assignmentSelect" required>
-                        <option value="" disabled selected>Select Assignment</option>
-                        <option value="1">Assignment 1</option>
-                        <option value="2">Assignment 2</option>
-                        <option value="3">Assignment 3</option>
-                        <option value="4">Assignment 4</option>
-                    </select>
-                    <button type="submit">Upload File</button>
-                </form>
-            </div>
-            <ul>
-                <li><button onclick="openSecondaryPage(1)">Logistics Assignments 216521</button></li>
-                <li><button onclick="openSecondaryPage(2)">Assignment 2</button></li>
-                <li><button onclick="openSecondaryPage(3)">Assignment 3</button></li>
-                <li><button onclick="openSecondaryPage(4)">Assignment 4</button></li>
-            </ul>
-        </div>
-
-        <div class="secondary-page" id="secondaryPage">
-            <h1 id="assignmentTitle"></h1>
-            <div class="file-list" id="fileList"></div>
-            <a href="#" onclick="closeSecondaryPage()" style="color: #ffcf00;">Back</a>
-        </div>
-
-        <div class="third-page" id="thirdPage">
-            <h1>Password</h1>
-            <input type="password" id="passwordInput" placeholder="Enter password">
-            <input type="checkbox" id="togglePassword"> Show Password
-            <button onclick="verifyPassword()">Submit</button>
-            <a href="#" onclick="closeThirdPage()" style="color: #ffcf00;">Back</a>
-        </div>
+<header>
+  <h1>Jaymes Cardoso-Ake</h1>
+</header>
+<div class="container" id="mainContainer">
+  <div class="buttons">
+    <div class="upload-section">
+      <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="fileInput" name="file" required>
+        <select id="assignmentSelect" required>
+          <option value="" disabled selected>Select Assignment</option>
+          <option value="1">Assignment 1</option>
+          <option value="2">Assignment 2</option>
+          <option value="3">Assignment 3</option>
+          <option value="4">Assignment 4</option>
+        </select>
+        <button type="submit">Upload File</button>
+      </form>
     </div>
+    <ul>
+      <li><button onclick="openAssignmentPage(1)">Logistics Assignments 216521</button></li>
+      <li><button onclick="openAssignmentPage(2)">Assignment 2</button></li>
+      <li><button onclick="openAssignmentPage(3)">Assignment 3</button></li>
+      <li><button onclick="openAssignmentPage(4)">Assignment 4</button></li>
+    </ul>
+  </div>
+</div>
 
-    <script>
-    let currentFileName = '';
-    let currentAssignmentNumber = '';
-    let actionType = ''; 
-    let fileToDeleteUrl = '';
-    let fileToDeleteAssignmentNumber = '';
+<div class="assignment-page" id="assignmentPage">
+  <h1 id="assignmentTitle"></h1>
+  <div class="file-list" id="fileList"></div>
+  <a href="#" onclick="closeAssignmentPage()" style="color: #ffcf00; margin-top:20px;">Back</a>
+</div>
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const preloadedFiles = [
-            {
-                url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/logistics%20of%20Nike.png',
-                name: 'logistics of Nike.png'
-            },
-            {
-                url: 'https://jaymesluc2.github.io/Uniwork/jaymesUWLogistics%20web%20app.html',
-                name: 'jaymesUWLogistics web app.html'
-            },
-            {
-                url: 'https://jaymesluc2.github.io/Uniwork/Logistics%20web%20based%20analysis1.html',
-                name: 'Logistics web based analysis1.html'
-            },
-            {
-                url: 'https://jaymesluc2.github.io/Uniwork/2165621%20Logistics%20Report.docx',
-                name: '2165621 Logistics Report.docx'
-            },
-            // Embedded per request:
-            {
-                url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/week%2012%20work.xlsx',
-                name: 'week 12 work.xlsx'
-            },
-            {
-                url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/WEEK%2012%20REVISED%20WAREHOUSE%20EXPLANATION.docx',
-                name: 'WEEK 12 REVISED WAREHOUSE EXPLANATION.docx'
-            }
-        ];
-        localStorage.setItem('assignment-1-files', JSON.stringify(preloadedFiles));
-    });
+<div class="third-page" id="thirdPage">
+  <h1>Password</h1>
+  <input type="password" id="passwordInput" placeholder="Enter password">
+  <input type="checkbox" id="togglePassword"> Show Password
+  <button onclick="verifyPassword()">Submit</button>
+  <a href="#" onclick="closeThirdPage()" style="color: #ffcf00;">Back</a>
+</div>
 
-    document.getElementById('uploadForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        openThirdPage('upload');
-    });
+<script>
+let currentFileName = '';
+let currentAssignmentNumber = '';
+let actionType = '';
+let fileToDeleteUrl = '';
+let fileToDeleteAssignmentNumber = '';
 
-    function saveFileToLocalStorage(file, assignmentNumber) {
-        const reader = new FileReader();
-        reader.onload = function (event) {
-            const fileContent = event.target.result;
-            const files = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-files`) || '[]');
-            files.push({ url: fileContent, name: file.name });
-            localStorage.setItem(`assignment-${assignmentNumber}-files`, JSON.stringify(files));
-        };
-        reader.readAsDataURL(file);
+document.addEventListener('DOMContentLoaded', () => {
+  const preloadedFiles = [
+    { url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/logistics%20of%20Nike.png', name: 'logistics of Nike.png' },
+    { url: 'https://jaymesluc2.github.io/Uniwork/jaymesUWLogistics%20web%20app.html', name: 'jaymesUWLogistics web app.html' },
+    { url: 'https://jaymesluc2.github.io/Uniwork/Logistics%20web%20based%20analysis1.html', name: 'Logistics web based analysis1.html' },
+    { url: 'https://jaymesluc2.github.io/Uniwork/2165621%20Logistics%20Report.docx', name: '2165621 Logistics Report.docx' },
+    { url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/week%2012%20work.xlsx', name: 'week 12 work.xlsx' },
+    { url: 'https://raw.githubusercontent.com/JaymesLuc2/Uniwork/main/WEEK%2012%20REVISED%20WAREHOUSE%20EXPLANATION.docx', name: 'WEEK 12 REVISED WAREHOUSE EXPLANATION.docx' },
+    { url: 'https://jaymesluc2.github.io/Uniwork/TSP%20GAME29.html', name: 'TSP GAME29.html' },
+    { url: 'https://github.com/JaymesLuc2/Uniwork/blob/main/Game%20Design%20Process%20Report.pdf?raw=true', name: 'Game Design Process Report.pdf' },
+    { url: 'https://github.com/JaymesLuc2/Uniwork/blob/main/TSP%20game%20Report.pdf?raw=true', name: 'TSP game Report.pdf' },
+    { url: 'https://jaymesluc2.github.io/Uniwork/battlepass.html', name: 'battlepass.html' }
+  ];
+  localStorage.setItem('assignment-1-files', JSON.stringify(preloadedFiles));
+});
+
+// Password toggle
+document.getElementById('togglePassword').addEventListener('change', function() {
+  const passwordInput = document.getElementById('passwordInput');
+  passwordInput.type = this.checked ? 'text' : 'password';
+});
+
+document.getElementById('uploadForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  openThirdPage('upload');
+});
+
+function saveFileToLocalStorage(file, assignmentNumber) {
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    const fileContent = event.target.result;
+    const files = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-files`) || '[]');
+    files.push({ url: fileContent, name: file.name });
+    localStorage.setItem(`assignment-${assignmentNumber}-files`, JSON.stringify(files));
+  };
+  reader.readAsDataURL(file);
+}
+
+function openAssignmentPage(assignmentNumber) {
+  // Hide main UI, show assignment page
+  document.getElementById('mainContainer').style.display = 'none';
+  const assignmentPage = document.getElementById('assignmentPage');
+  assignmentPage.classList.add('show');
+  assignmentPage.scrollIntoView({behavior: "auto", block: "start"});
+  // Set title
+  let titleText = '';
+  switch (assignmentNumber) {
+    case 1: titleText = 'Logistics Assignments 216521'; break;
+    case 2: titleText = 'Assignment 2'; break;
+    case 3: titleText = 'Assignment 3'; break;
+    case 4: titleText = 'Assignment 4'; break;
+    default: titleText = 'Assignment';
+  }
+  document.getElementById('assignmentTitle').textContent = titleText;
+  // Show files
+  const fileList = document.getElementById('fileList');
+  fileList.innerHTML = '';
+  const files = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-files`) || '[]');
+  files.forEach((file) => {
+    const fileItem = document.createElement('div');
+    fileItem.className = 'file-item';
+    fileItem.innerHTML = `
+      <a href="${file.url}" target="_blank">${file.name}</a>
+      <button class="delete-button" onclick="confirmDelete(${assignmentNumber}, '${file.url}')">Delete</button>
+      <button class="download-button" onclick="downloadFile('${file.url}')">Download</button>
+    `;
+    fileList.appendChild(fileItem);
+
+    if (file.name === 'jaymesUWLogistics web app.html') {
+      const linkItem = document.createElement('div');
+      linkItem.className = 'file-item';
+      linkItem.innerHTML = `<a href="${file.url}" target="_blank">Open jaymesUWLogistics web app</a>`;
+      fileList.appendChild(linkItem);
     }
-
-    function openSecondaryPage(assignmentNumber) {
-        const fileList = document.getElementById('fileList');
-        fileList.innerHTML = ''; 
-
-        const files = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-files`) || '[]');
-        files.forEach((file) => {
-            const fileItem = document.createElement('div');
-            fileItem.className = 'file-item';
-            fileItem.innerHTML = `
-                <a href="${file.url}" target="_blank">${file.name}</a>
-                <button class="delete-button" onclick="confirmDelete(${assignmentNumber}, '${file.url}')">Delete</button>
-                <button class="download-button" onclick="downloadFile('${file.url}')">Download</button>
-            `;
-            fileList.appendChild(fileItem);
-
-            if (file.name === 'jaymesUWLogistics web app.html') {
-                const linkItem = document.createElement('div');
-                linkItem.className = 'file-item';
-                linkItem.innerHTML = `
-                    <a href="${file.url}" target="_blank">Open jaymesUWLogistics web app</a>
-                `;
-                fileList.appendChild(linkItem);
-            }
-
-            if (file.name === 'Logistics web based analysis1.html') {
-                const linkItem = document.createElement('div');
-                linkItem.className = 'file-item';
-                linkItem.innerHTML = `
-                    <a href="${file.url}" target="_blank">Open Logistics web based analysis1</a>
-                `;
-                fileList.appendChild(linkItem);
-            }
-        });
-
-        document.getElementById('secondaryPage').classList.add('show');
+    if (file.name === 'Logistics web based analysis1.html') {
+      const linkItem = document.createElement('div');
+      linkItem.className = 'file-item';
+      linkItem.innerHTML = `<a href="${file.url}" target="_blank">Open Logistics web based analysis1</a>`;
+      fileList.appendChild(linkItem);
     }
-
-    function closeSecondaryPage() {
-        document.getElementById('secondaryPage').classList.remove('show');
+    if (file.name === 'TSP GAME29.html') {
+      const linkItem = document.createElement('div');
+      linkItem.className = 'file-item';
+      linkItem.innerHTML = `<a href="${file.url}" target="_blank">Open TSP Game</a>`;
+      fileList.appendChild(linkItem);
     }
-
-    function openThirdPage(type) {
-        actionType = type;
-        document.getElementById('thirdPage').classList.add('show');
+    if (file.name === 'battlepass.html') {
+      const linkItem = document.createElement('div');
+      linkItem.className = 'file-item';
+      linkItem.innerHTML = `<a href="${file.url}" target="_blank">Open Battlepass</a>`;
+      fileList.appendChild(linkItem);
     }
+  });
+}
 
-    function closeThirdPage() {
-        document.getElementById('thirdPage').classList.remove('show');
-        document.getElementById('passwordInput').value = '';
+function closeAssignmentPage() {
+  document.getElementById('assignmentPage').classList.remove('show');
+  document.getElementById('mainContainer').style.display = '';
+}
+
+function openThirdPage(type) {
+  actionType = type;
+  document.getElementById('thirdPage').classList.add('show');
+}
+
+function closeThirdPage() {
+  document.getElementById('thirdPage').classList.remove('show');
+  document.getElementById('passwordInput').value = '';
+}
+
+function verifyPassword() {
+  const password = document.getElementById('passwordInput').value;
+  if (password === '5599') {
+    if (actionType === 'upload') {
+      const fileInput = document.getElementById('fileInput');
+      const assignmentSelect = document.getElementById('assignmentSelect');
+      const file = fileInput.files[0];
+      const assignmentNumber = assignmentSelect.value;
+      if (file && assignmentNumber) {
+        saveFileToLocalStorage(file, assignmentNumber);
+        alert('File uploaded successfully.');
+      } else {
+        alert('Please select a file and an assignment.');
+      }
+    } else if (actionType === 'delete') {
+      deleteFile(fileToDeleteAssignmentNumber, fileToDeleteUrl);
     }
+  } else {
+    alert('Incorrect password.');
+  }
+  closeThirdPage();
+}
 
-    function verifyPassword() {
-        const password = document.getElementById('passwordInput').value;
-        if (password === '5599') {
-            if (actionType === 'upload') {
-                const fileInput = document.getElementById('fileInput');
-                const assignmentSelect = document.getElementById('assignmentSelect');
-                const file = fileInput.files[0];
-                const assignmentNumber = assignmentSelect.value;
+function confirmDelete(assignmentNumber, fileUrl) {
+  fileToDeleteAssignmentNumber = assignmentNumber;
+  fileToDeleteUrl = fileUrl;
+  openThirdPage('delete');
+}
 
-                if (file && assignmentNumber) {
-                    saveFileToLocalStorage(file, assignmentNumber);
-                    alert('File uploaded successfully.');
-                } else {
-                    alert('Please select a file and an assignment.');
-                }
-            } else if (actionType === 'delete') {
-                deleteFile(fileToDeleteAssignmentNumber, fileToDeleteUrl);
-            }
-        } else {
-            alert('Incorrect password.');
-        }
-        closeThirdPage();
-    }
+function deleteFile(assignmentNumber, fileUrl) {
+  let files = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-files`) || '[]');
+  files = files.filter(file => file.url !== fileUrl);
+  localStorage.setItem(`assignment-${assignmentNumber}-files`, JSON.stringify(files));
+  alert('File deleted successfully.');
+  openAssignmentPage(assignmentNumber);
+}
 
-    function confirmDelete(assignmentNumber, fileUrl) {
-        fileToDeleteAssignmentNumber = assignmentNumber;
-        fileToDeleteUrl = fileUrl;
-        openThirdPage('delete');
-    }
-
-    function deleteFile(assignmentNumber, fileUrl) {
-        let files = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-files`) || '[]');
-        files = files.filter(file => file.url !== fileUrl);
-        localStorage.setItem(`assignment-${assignmentNumber}-files`, JSON.stringify(files));
-        alert('File deleted successfully.');
-        openSecondaryPage(assignmentNumber);
-    }
-
-    function downloadFile(url) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = url.split('/').pop();
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-    </script>
+function downloadFile(url) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = url.split('/').pop();
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>
 </body>
 </html>
