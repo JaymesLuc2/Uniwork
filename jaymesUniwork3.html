@@ -141,26 +141,6 @@
     let fileToDeleteUrl = '';
     let fileToDeleteAssignmentNumber = '';
 
-    // Static files always shown for Assignment 1
-    const staticAssignment1Files = [
-        {
-            url: 'jaymesUniwork3/assignment1/Game.pdf',
-            name: 'Game.pdf'
-        },
-        {
-            url: 'jaymesUniwork3/assignment1/Game Design Process Report.pdf',
-            name: 'Game Design Process Report.pdf'
-        },
-        {
-            url: 'jaymesUniwork3/assignment1/TSP GAME29.html',
-            name: 'TSP GAME29.html'
-        },
-        {
-            url: 'jaymesUniwork3/assignment1/battle pass.zip',
-            name: 'battle pass.zip'
-        }
-    ];
-
     document.addEventListener('DOMContentLoaded', () => {
         const preloadedFiles = [
             {
@@ -212,28 +192,6 @@
         const fileList = document.getElementById('fileList');
         fileList.innerHTML = ''; 
 
-        // Show static files for Assignment 1
-        if (assignmentNumber === 1) {
-            staticAssignment1Files.forEach(file => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                // Determine file extension for button logic
-                const ext = file.name.split('.').pop().toLowerCase();
-                let openBtn = '';
-                if (['pdf','html'].includes(ext)) {
-                    openBtn = `<button class="download-button" onclick="window.open('${file.url}', '_blank')">Open</button>`;
-                }
-                // Only show Download for ZIPs, but allow download for all
-                fileItem.innerHTML = `
-                    <a href="${file.url}" target="_blank">${file.name}</a>
-                    ${openBtn}
-                    <button class="download-button" onclick="downloadFile('${file.url}', '${file.name}')">Download</button>
-                `;
-                fileList.appendChild(fileItem);
-            });
-        }
-
-        // Show uploaded/managed files
         const files = JSON.parse(localStorage.getItem(`assignment-${assignmentNumber}-files`) || '[]');
         files.forEach((file) => {
             const fileItem = document.createElement('div');
@@ -241,7 +199,7 @@
             fileItem.innerHTML = `
                 <a href="${file.url}" target="_blank">${file.name}</a>
                 <button class="delete-button" onclick="confirmDelete(${assignmentNumber}, '${file.url}')">Delete</button>
-                <button class="download-button" onclick="downloadFile('${file.url}', '${file.name}')">Download</button>
+                <button class="download-button" onclick="downloadFile('${file.url}')">Download</button>
             `;
             fileList.appendChild(fileItem);
 
@@ -319,10 +277,10 @@
         openSecondaryPage(assignmentNumber);
     }
 
-    function downloadFile(url, name) {
+    function downloadFile(url) {
         const link = document.createElement('a');
         link.href = url;
-        link.download = name || url.split('/').pop();
+        link.download = url.split('/').pop();
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
